@@ -17,9 +17,9 @@
           --text: #e8e8f0;
           --muted: #6b6b80;
           --danger: #f76a6a;
-          --open: #6af7b8;
-          --closed: #f7c26a;
-          --archived: #6a9af7;
+          --just-posted: #6af7b8;
+          --first-reactions: #f7c26a;
+          --outdated: #6a9af7;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,6 +77,19 @@
         .nav-btn.active { background: rgba(124,106,247,.15); color: var(--accent); }
         .nav-btn .icon { font-size: 1rem; width: 20px; text-align: center; }
 
+        /* Tags in sidebar */
+        .tag-nav-btn {
+          width: 100%; display: flex; align-items: center; gap: 8px;
+          padding: 7px 12px; border-radius: 8px;
+          border: none; background: transparent;
+          color: var(--muted); font-family: 'DM Mono', monospace;
+          font-size: .75rem; cursor: pointer; transition: all .2s;
+          text-align: left; margin-bottom: 2px;
+        }
+        .tag-nav-btn:hover { background: var(--surface2); color: var(--accent2); }
+        .tag-nav-btn.active { background: rgba(247,194,106,.1); color: var(--accent2); }
+        .tag-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2); flex-shrink: 0; }
+
         .sidebar-stats { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
         .stat-pill {
           display: flex; justify-content: space-between;
@@ -119,10 +132,26 @@
         .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
         .btn-danger { background: rgba(247,106,106,.15); color: var(--danger); border: 1px solid rgba(247,106,106,.3); }
         .btn-danger:hover { background: rgba(247,106,106,.25); }
+        .btn-warning { background: rgba(247,194,106,.15); color: var(--accent2); border: 1px solid rgba(247,194,106,.3); }
+        .btn-warning:hover { background: rgba(247,194,106,.25); }
         .btn-sm { padding: 5px 12px; font-size: .75rem; border-radius: 7px; }
 
         /* ─── CONTENT ─── */
         .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+        /* Tag filter banner */
+        .tag-filter-banner {
+          display: none; align-items: center; gap: 10px;
+          background: rgba(247,194,106,.08); border: 1px solid rgba(247,194,106,.2);
+          border-radius: 10px; padding: 10px 16px; margin-bottom: 16px;
+          font-size: .85rem; color: var(--accent2);
+        }
+        .tag-filter-banner.visible { display: flex; }
+        .tag-filter-banner button {
+          margin-left: auto; background: none; border: none;
+          color: var(--muted); cursor: pointer; font-size: 1rem;
+        }
+        .tag-filter-banner button:hover { color: var(--danger); }
 
         .filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .filter-pill {
@@ -132,8 +161,9 @@
           transition: all .2s; font-family: 'Syne', sans-serif;
         }
         .filter-pill:hover, .filter-pill.active { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,.1); }
-        .filter-pill.open.active { border-color: var(--open); color: var(--open); background: rgba(106,247,184,.1); }
-        .filter-pill.closed.active { border-color: var(--closed); color: var(--closed); background: rgba(247,194,106,.1); }
+        .filter-pill.just-posted.active { border-color: var(--just-posted); color: var(--just-posted); background: rgba(106,247,184,.1); }
+        .filter-pill.first-reactions.active { border-color: var(--first-reactions); color: var(--first-reactions); background: rgba(247,194,106,.1); }
+        .filter-pill.outdated.active { border-color: var(--outdated); color: var(--outdated); background: rgba(106,154,247,.1); }
 
         /* ─── POST CARDS ─── */
         .posts-grid { display: flex; flex-direction: column; gap: 12px; }
@@ -162,11 +192,21 @@
           border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
           flex-shrink: 0; font-family: 'DM Mono', monospace;
         }
-        .status-OPEN { background: rgba(106,247,184,.15); color: var(--open); }
-        .status-CLOSED { background: rgba(247,194,106,.15); color: var(--closed); }
-        .status-ARCHIVED { background: rgba(106,154,247,.15); color: var(--archived); }
+        .status-JUST_POSTED { background: rgba(106,247,184,.15); color: var(--just-posted); }
+        .status-FIRST_REACTIONS { background: rgba(247,194,106,.15); color: var(--first-reactions); }
+        .status-OUTDATED { background: rgba(106,154,247,.15); color: var(--outdated); }
 
-        /* Imaginea pe card */
+        /* Tag chips pe card */
+        .post-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+        .tag-chip {
+          font-size: .65rem; font-weight: 700; padding: 2px 8px;
+          border-radius: 12px; background: rgba(247,194,106,.1);
+          color: var(--accent2); font-family: 'DM Mono', monospace;
+          border: 1px solid rgba(247,194,106,.2); cursor: pointer;
+          transition: all .2s;
+        }
+        .tag-chip:hover { background: rgba(247,194,106,.2); }
+
         .post-image {
           width: calc(100% + 48px); margin: 0 -24px 14px;
           max-height: 240px; object-fit: cover; display: block;
@@ -179,7 +219,7 @@
         .post-actions {
           display: flex; gap: 8px; margin-top: 12px;
           padding-top: 12px; border-top: 1px solid var(--border);
-          align-items: center;
+          align-items: center; flex-wrap: wrap;
         }
 
         /* ─── LIKE BUTTON ─── */
@@ -216,7 +256,6 @@
         .detail-body { flex: 1; overflow-y: auto; padding: 24px; }
         .detail-body .full-content { font-size: .9rem; line-height: 1.8; color: #c0c0d0; margin-bottom: 24px; }
 
-        /* Imaginea in detail panel */
         .detail-image {
           width: calc(100% + 48px); margin: -24px -24px 20px;
           max-height: 200px; object-fit: cover; display: block;
@@ -234,7 +273,6 @@
         }
         .comment-card:hover { border-color: var(--accent); }
         .comment-author { font-size: .75rem; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
-        /* DATA COMPLETA: zi.luna.an ora:min:sec */
         .comment-date {
           font-size: .68rem; color: var(--muted);
           font-family: 'DM Mono', monospace; margin-bottom: 6px;
@@ -251,6 +289,13 @@
           outline: none; transition: border-color .2s;
         }
         .comment-input-row input:focus { border-color: var(--accent); }
+
+        /* Locked post notice */
+        .locked-notice {
+          background: rgba(106,154,247,.08); border: 1px solid rgba(106,154,247,.2);
+          border-radius: 10px; padding: 10px 14px; margin-bottom: 12px;
+          font-size: .8rem; color: var(--outdated); text-align: center;
+        }
 
         /* ─── MODAL ─── */
         .modal-overlay {
@@ -283,6 +328,33 @@
         .form-group textarea { resize: vertical; min-height: 100px; }
         .form-group select option { background: var(--surface2); }
 
+        /* Tag input */
+        .tags-input-wrapper {
+          background: var(--surface2); border: 1px solid var(--border);
+          border-radius: 10px; padding: 8px 12px;
+          display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+          cursor: text; transition: border-color .2s;
+        }
+        .tags-input-wrapper:focus-within { border-color: var(--accent); }
+        .tag-chip-removable {
+          display: flex; align-items: center; gap: 4px;
+          font-size: .7rem; font-weight: 700; padding: 3px 8px;
+          border-radius: 12px; background: rgba(247,194,106,.15);
+          color: var(--accent2); font-family: 'DM Mono', monospace;
+          border: 1px solid rgba(247,194,106,.3);
+        }
+        .tag-chip-removable button {
+          background: none; border: none; color: var(--muted);
+          cursor: pointer; font-size: .8rem; padding: 0; line-height: 1;
+        }
+        .tag-chip-removable button:hover { color: var(--danger); }
+        .tags-input-field {
+          background: none; border: none; outline: none;
+          color: var(--text); font-family: 'DM Mono', monospace;
+          font-size: .8rem; flex: 1; min-width: 80px; padding: 4px;
+        }
+        .tags-hint { font-size: .7rem; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
         /* Upload imagine */
         .upload-area {
           border: 2px dashed var(--border); border-radius: 10px;
@@ -309,7 +381,7 @@
           transition: all .3s; max-width: 320px;
         }
         .toast.show { transform: translateY(0); opacity: 1; }
-        .toast.success { border-color: var(--open); color: var(--open); }
+        .toast.success { border-color: var(--just-posted); color: var(--just-posted); }
         .toast.error { border-color: var(--danger); color: var(--danger); }
 
         .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
@@ -373,22 +445,30 @@
         </div>
 
         <div class="nav-section">
-            <div class="nav-label">Quick Filters</div>
-            <button class="nav-btn" onclick="filterByStatus('OPEN')">
-                <span class="icon" style="color:var(--open)">&#9679;</span> Open Posts
+            <div class="nav-label">Filter by Status</div>
+            <button class="nav-btn" onclick="filterByStatus('JUST_POSTED')">
+                <span class="icon" style="color:var(--just-posted)">&#9679;</span> Just Posted
             </button>
-            <button class="nav-btn" onclick="filterByStatus('CLOSED')">
-                <span class="icon" style="color:var(--closed)">&#9679;</span> Closed Posts
+            <button class="nav-btn" onclick="filterByStatus('FIRST_REACTIONS')">
+                <span class="icon" style="color:var(--first-reactions)">&#9679;</span> First Reactions
             </button>
-            <button class="nav-btn" onclick="filterByStatus('ARCHIVED')">
-                <span class="icon" style="color:var(--archived)">&#9679;</span> Archived Posts
+            <button class="nav-btn" onclick="filterByStatus('OUTDATED')">
+                <span class="icon" style="color:var(--outdated)">&#9679;</span> Outdated
             </button>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Filter by Tag</div>
+            <div id="tags-nav-list">
+                <div style="color:var(--muted);font-size:.75rem;padding:4px 8px">Loading tags...</div>
+            </div>
         </div>
 
         <div class="sidebar-stats">
             <div class="stat-pill"><span>Total Posts</span><span id="stat-posts">0</span></div>
             <div class="stat-pill"><span>Total Users</span><span id="stat-users">0</span></div>
-            <div class="stat-pill"><span>Open</span><span id="stat-open" style="color:var(--open)">0</span></div>
+            <div class="stat-pill"><span>Just Posted</span><span id="stat-just" style="color:var(--just-posted)">0</span></div>
+            <div class="stat-pill"><span>First Reactions</span><span id="stat-first" style="color:var(--first-reactions)">0</span></div>
         </div>
     </aside>
 
@@ -405,11 +485,18 @@
 
         <div class="content">
             <div id="posts-view">
+                <!-- Tag filter active banner -->
+                <div class="tag-filter-banner" id="tag-filter-banner">
+                    <span>&#127991;</span>
+                    <span id="tag-filter-label">Filtering by tag</span>
+                    <button onclick="clearTagFilter()" title="Clear filter">&#10005;</button>
+                </div>
+
                 <div class="filters">
                     <button class="filter-pill active" onclick="setFilter('ALL', this)">All</button>
-                    <button class="filter-pill open" onclick="setFilter('OPEN', this)">Open</button>
-                    <button class="filter-pill closed" onclick="setFilter('CLOSED', this)">Closed</button>
-                    <button class="filter-pill" onclick="setFilter('ARCHIVED', this)">Archived</button>
+                    <button class="filter-pill just-posted" onclick="setFilter('JUST_POSTED', this)">Just Posted</button>
+                    <button class="filter-pill first-reactions" onclick="setFilter('FIRST_REACTIONS', this)">First Reactions</button>
+                    <button class="filter-pill" onclick="setFilter('OUTDATED', this)">Outdated</button>
                 </div>
                 <div class="posts-grid" id="posts-container">
                     <div class="empty"><div class="icon">&#9632;</div><p>Loading posts...</p></div>
@@ -461,10 +548,19 @@
         <div class="form-group" id="status-group" style="display:none">
             <label>STATUS</label>
             <select id="post-status">
-                <option value="OPEN">Open</option>
-                <option value="CLOSED">Closed</option>
-                <option value="ARCHIVED">Archived</option>
+                <option value="JUST_POSTED">Just Posted</option>
+                <option value="FIRST_REACTIONS">First Reactions</option>
+                <option value="OUTDATED">Outdated</option>
             </select>
+        </div>
+        <div class="form-group">
+            <label>TAGS (optional)</label>
+            <div class="tags-input-wrapper" id="tags-wrapper" onclick="document.getElementById('tag-input-field').focus()">
+                <div id="tags-chips-container"></div>
+                <input type="text" id="tag-input-field" class="tags-input-field"
+                       placeholder="Add tag..." onkeydown="handleTagInput(event)"/>
+            </div>
+            <div class="tags-hint">Press Enter or comma to add a tag</div>
         </div>
         <div class="form-group">
             <label>IMAGE (optional)</label>
@@ -510,23 +606,26 @@
     const API = '/api';
     let currentTab = 'posts';
     let currentFilter = 'ALL';
+    let currentTagFilter = null; // tag activ
     let currentPostId = null;
     let editingPostId = null;
     let editingUserId = null;
     let allPosts = [];
     let allUsers = [];
+    let allTags = [];
     let searchTimeout = null;
+    let currentPostTags = []; // tag-uri in modalul de creare
 
-    // Like-uri stocate local per sesiune
     const likesData = {};
 
     // ─── INIT ─────────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
         loadPosts();
         loadUsers();
+        loadTags();
     });
 
-    // ─── API ─────────────────────────────────────────────────────────────────
+    // ─── API ──────────────────────────────────────────────────────────────────
     async function request(url, options = {}) {
         const res = await fetch(API + url, {
             headers: { 'Content-Type': 'application/json' },
@@ -541,8 +640,6 @@
     }
 
     // ─── DATE FORMATTERS ─────────────────────────────────────────────────────
-
-    // Data completa: zi.luna.an ora:min:sec  — pentru comentarii
     function formatDateFull(d) {
         if (!d) return '';
         const dt = new Date(d);
@@ -551,10 +648,18 @@
         return `${z(dt.getDate())}.${z(dt.getMonth()+1)}.${dt.getFullYear()} ${z(dt.getHours())}:${z(dt.getMinutes())}:${z(dt.getSeconds())}`;
     }
 
-    // Data scurta pentru carduri
     function formatDate(d) {
         if (!d) return '';
         return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function statusLabel(s) {
+        const map = {
+            JUST_POSTED: 'Just Posted',
+            FIRST_REACTIONS: 'First Reactions',
+            OUTDATED: 'Outdated'
+        };
+        return map[s] || s;
     }
 
     // ─── TOAST ───────────────────────────────────────────────────────────────
@@ -579,6 +684,35 @@
         if (cnt) cnt.textContent = likesData[postId].count > 0 ? likesData[postId].count : '';
     }
 
+    // ─── TAG INPUT (modal) ────────────────────────────────────────────────────
+    function handleTagInput(event) {
+        const field = document.getElementById('tag-input-field');
+        if (event.key === 'Enter' || event.key === ',') {
+            event.preventDefault();
+            const val = field.value.trim().replace(/,/g, '').toLowerCase();
+            if (val && !currentPostTags.includes(val)) {
+                currentPostTags.push(val);
+                renderTagChips();
+            }
+            field.value = '';
+        } else if (event.key === 'Backspace' && field.value === '' && currentPostTags.length > 0) {
+            currentPostTags.pop();
+            renderTagChips();
+        }
+    }
+
+    function removeTag(tag) {
+        currentPostTags = currentPostTags.filter(t => t !== tag);
+        renderTagChips();
+    }
+
+    function renderTagChips() {
+        const c = document.getElementById('tags-chips-container');
+        c.innerHTML = currentPostTags.map(t =>
+            `<span class="tag-chip-removable">#${t}<button onclick="removeTag('${t}')" type="button">&#10005;</button></span>`
+        ).join('');
+    }
+
     // ─── TAB SWITCHING ───────────────────────────────────────────────────────
     function switchTab(tab) {
         currentTab = tab;
@@ -592,6 +726,65 @@
         document.getElementById('create-btn').onclick = tab === 'posts' ? openCreateModal : openCreateUserModal;
         if (tab === 'users') { closeDetail(); renderUsers(allUsers); }
         else renderPosts(getFilteredPosts());
+    }
+
+    // ─── TAGS ────────────────────────────────────────────────────────────────
+    async function loadTags() {
+        try {
+            allTags = await request('/posts/tags');
+            renderTagsNav();
+        } catch(e) {
+            document.getElementById('tags-nav-list').innerHTML =
+                '<div style="color:var(--muted);font-size:.75rem;padding:4px 8px">No tags found</div>';
+        }
+    }
+
+    function renderTagsNav() {
+        const c = document.getElementById('tags-nav-list');
+        if (!allTags || allTags.length === 0) {
+            c.innerHTML = '<div style="color:var(--muted);font-size:.75rem;padding:4px 8px">No tags yet</div>';
+            return;
+        }
+        c.innerHTML = allTags.map(t => `
+            <button class="tag-nav-btn${currentTagFilter === t.name ? ' active' : ''}"
+                    onclick="filterByTag('${t.name}')" id="tag-nav-${t.name}">
+                <span class="tag-dot"></span>#${t.name}
+            </button>`).join('');
+    }
+
+    function filterByTag(tagName) {
+        switchTab('posts');
+        currentTagFilter = tagName;
+        currentFilter = 'ALL'; // resetam filtrul de status
+
+        // Actualizam UI sidebar
+        document.querySelectorAll('.tag-nav-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.getElementById('tag-nav-' + tagName);
+        if (btn) btn.classList.add('active');
+
+        // Aratam bannerul
+        document.getElementById('tag-filter-banner').classList.add('visible');
+        document.getElementById('tag-filter-label').textContent = `Showing posts tagged: #${tagName}`;
+
+        // Resetam filter pills
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        document.querySelector('.filter-pill').classList.add('active');
+
+        loadPostsByTag(tagName);
+    }
+
+    async function loadPostsByTag(tagName) {
+        try {
+            const posts = await request(`/posts?tag=${encodeURIComponent(tagName)}`);
+            renderPosts(posts);
+        } catch(e) { showToast('Error loading posts by tag', 'error'); }
+    }
+
+    function clearTagFilter() {
+        currentTagFilter = null;
+        document.getElementById('tag-filter-banner').classList.remove('visible');
+        document.querySelectorAll('.tag-nav-btn').forEach(b => b.classList.remove('active'));
+        renderPosts(getFilteredPosts());
     }
 
     // ─── POSTS ────────────────────────────────────────────────────────────────
@@ -612,6 +805,10 @@
     }
 
     function setFilter(status, el) {
+        currentTagFilter = null;
+        document.getElementById('tag-filter-banner').classList.remove('visible');
+        document.querySelectorAll('.tag-nav-btn').forEach(b => b.classList.remove('active'));
+
         currentFilter = status;
         document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
         el.classList.add('active');
@@ -620,14 +817,16 @@
 
     function filterByStatus(status) {
         switchTab('posts');
+        currentTagFilter = null;
+        document.getElementById('tag-filter-banner').classList.remove('visible');
         currentFilter = status;
         document.querySelectorAll('.filter-pill').forEach(p => {
-            p.classList.toggle('active', p.textContent.trim().toUpperCase() === status);
+            p.classList.toggle('active',
+                p.textContent.trim().toUpperCase().replace(/ /g, '_') === status);
         });
         renderPosts(getFilteredPosts());
     }
 
-    // Search dupa titlu SAU username autor (backend face cautarea)
     function handleSearch() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(async () => {
@@ -651,15 +850,21 @@
             const imgHtml = p.imageUrl
                 ? `<img src="${p.imageUrl}" class="post-image" alt="Post image" onerror="this.style.display='none'">`
                 : '';
+            const tagsHtml = (p.tags && p.tags.length > 0)
+                ? `<div class="post-tags">${p.tags.map(t =>
+                    `<span class="tag-chip" onclick="event.stopPropagation();filterByTag('${t.name}')">#${t.name}</span>`
+                  ).join('')}</div>`
+                : '';
             return `
             <div class="post-card${currentPostId === p.id ? ' selected' : ''}"
                  onclick="openDetail(${p.id})"
                  style="animation-delay:${i * 0.04}s">
               <div class="post-header">
                 <h3>${escHtml(p.title)}</h3>
-                <span class="status-badge status-${p.status}">${p.status}</span>
+                <span class="status-badge status-${p.status}">${statusLabel(p.status)}</span>
               </div>
               ${imgHtml}
+              ${tagsHtml}
               <p class="post-excerpt">${escHtml(p.content)}</p>
               <div class="post-meta">
                 <span class="author">${p.author ? p.author.username : 'Unknown'}</span>
@@ -674,6 +879,7 @@
                 </button>
                 <button class="btn btn-sm btn-secondary" onclick="openEditModal(${p.id})">Edit</button>
                 <button class="btn btn-sm btn-danger" onclick="deletePost(${p.id})">Delete</button>
+                ${p.status !== 'OUTDATED' ? `<button class="btn btn-sm btn-warning" onclick="lockPost(${p.id})">&#128274; Lock</button>` : ''}
               </div>
             </div>`;
         }).join('');
@@ -681,12 +887,14 @@
 
     function updateStats() {
         document.getElementById('stat-posts').textContent = allPosts.length;
-        document.getElementById('stat-open').textContent = allPosts.filter(p => p.status === 'OPEN').length;
+        document.getElementById('stat-just').textContent = allPosts.filter(p => p.status === 'JUST_POSTED').length;
+        document.getElementById('stat-first').textContent = allPosts.filter(p => p.status === 'FIRST_REACTIONS').length;
     }
 
     // ─── POST CRUD ────────────────────────────────────────────────────────────
     function openCreateModal() {
         editingPostId = null;
+        currentPostTags = [];
         document.getElementById('modal-title').textContent = 'New Post';
         document.getElementById('save-post-btn').textContent = 'Create Post';
         document.getElementById('post-title').value = '';
@@ -697,6 +905,8 @@
         document.getElementById('uploadPreview').style.display = 'none';
         document.getElementById('uploadText').style.display = 'block';
         document.getElementById('imageUpload').value = '';
+        renderTagChips();
+        document.getElementById('tag-input-field').value = '';
         document.getElementById('post-modal').classList.add('open');
     }
 
@@ -704,6 +914,7 @@
         const post = allPosts.find(p => p.id === id);
         if (!post) return;
         editingPostId = id;
+        currentPostTags = [];
         document.getElementById('modal-title').textContent = 'Edit Post';
         document.getElementById('save-post-btn').textContent = 'Save Changes';
         document.getElementById('post-title').value = post.title;
@@ -713,6 +924,7 @@
         document.getElementById('post-status').value = post.status;
         document.getElementById('uploadPreview').style.display = 'none';
         document.getElementById('uploadText').style.display = 'block';
+        renderTagChips();
         document.getElementById('post-modal').classList.add('open');
     }
 
@@ -730,16 +942,24 @@
         const content = document.getElementById('post-content').value.trim();
         if (!title || !content) { showToast('Title and content are required', 'error'); return; }
 
+        // Adauga si tag-ul partial din input daca exista
+        const pendingTag = document.getElementById('tag-input-field').value.trim().toLowerCase();
+        if (pendingTag && !currentPostTags.includes(pendingTag)) {
+            currentPostTags.push(pendingTag);
+        }
+
         try {
             if (editingPostId) {
                 const status = document.getElementById('post-status').value;
-                await request(`/posts/${editingPostId}`, { method: 'PUT', body: JSON.stringify({ title, content, status }) });
+                const userId = prompt('Your user ID (for author verification):');
+                const body = { title, content, status };
+                if (userId) body.userId = parseInt(userId);
+                await request(`/posts/${editingPostId}`, { method: 'PUT', body: JSON.stringify(body) });
                 showToast('Post updated successfully');
             } else {
                 const authorId = parseInt(document.getElementById('post-author').value);
                 if (!authorId) { showToast('Author ID is required', 'error'); return; }
 
-                // Upload imagine optional
                 let imageUrl = null;
                 const fileInput = document.getElementById('imageUpload');
                 if (fileInput.files.length > 0) {
@@ -751,13 +971,15 @@
                     } catch(e) { console.warn('Image upload failed'); }
                 }
 
-                const body = { title, content, authorId };
+                const body = { title, content, authorId, tags: currentPostTags };
                 if (imageUrl) body.imageUrl = imageUrl;
                 await request('/posts', { method: 'POST', body: JSON.stringify(body) });
                 showToast('Post created successfully');
             }
             closeModal('post-modal');
             await loadPosts();
+            await loadTags();
+            renderTagsNav();
             if (currentPostId) openDetail(currentPostId);
         } catch(e) {
             showToast(e.message, 'error');
@@ -765,13 +987,29 @@
     }
 
     async function deletePost(id) {
+        const userId = prompt('Your user ID (to verify you are the author):');
+        if (!userId) return;
         if (!confirm('Delete this post?')) return;
         try {
-            await request(`/posts/${id}`, { method: 'DELETE' });
+            await request(`/posts/${id}?userId=${userId}`, { method: 'DELETE' });
             showToast('Post deleted');
             if (currentPostId === id) closeDetail();
             await loadPosts();
             renderPosts(getFilteredPosts());
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function lockPost(id) {
+        const userId = prompt('Your user ID (only the post author can lock it):');
+        if (!userId) return;
+        try {
+            await request(`/posts/${id}/lock`, {
+                method: 'POST',
+                body: JSON.stringify({ userId: parseInt(userId) })
+            });
+            showToast('Post locked — status set to Outdated');
+            await loadPosts();
+            if (currentPostId === id) openDetail(id);
         } catch(e) { showToast(e.message, 'error'); }
     }
 
@@ -789,11 +1027,22 @@
                 request(`/posts/${id}/comments`)
             ]);
             document.getElementById('detail-title').textContent = post.title;
-            document.getElementById('comment-footer').style.display = '';
 
-            // Imaginea in panoul de detalii
+            const isLocked = post.status === 'OUTDATED';
+            document.getElementById('comment-footer').style.display = isLocked ? 'none' : '';
+
             const detailImg = post.imageUrl
                 ? `<img src="${post.imageUrl}" class="detail-image" alt="Post image" onerror="this.style.display='none'">`
+                : '';
+
+            const tagsHtml = (post.tags && post.tags.length > 0)
+                ? `<div class="post-tags" style="margin-bottom:16px">${post.tags.map(t =>
+                    `<span class="tag-chip" onclick="filterByTag('${t.name}')">#${t.name}</span>`
+                  ).join('')}</div>`
+                : '';
+
+            const lockedNotice = isLocked
+                ? `<div class="locked-notice">&#128274; This post is locked. No new comments can be added.</div>`
                 : '';
 
             const commentsHtml = comments.length === 0
@@ -812,11 +1061,13 @@
             document.getElementById('detail-body').innerHTML = `
                 ${detailImg}
                 <div class="full-content">${escHtml(post.content)}</div>
+                ${tagsHtml}
                 <div class="post-meta" style="margin-bottom:20px">
                   <span class="author">${post.author ? post.author.username : 'Unknown'}</span>
-                  <span class="status-badge status-${post.status}">${post.status}</span>
+                  <span class="status-badge status-${post.status}">${statusLabel(post.status)}</span>
                   <span style="color:var(--muted)">${formatDate(post.createdAt)}</span>
                 </div>
+                ${lockedNotice}
                 <div class="comments-section">
                   <h4>Comments (${comments.length})</h4>
                   ${commentsHtml}
@@ -853,9 +1104,12 @@
     async function editComment(postId, commentId, currentText) {
         const newText = prompt('Edit comment:', currentText);
         if (!newText || newText.trim() === currentText) return;
+        const userId = prompt('Your user ID (to verify you are the author):');
         try {
+            const body = { content: newText.trim() };
+            if (userId) body.userId = parseInt(userId);
             await request(`/posts/${postId}/comments/${commentId}`, {
-                method: 'PUT', body: JSON.stringify({ content: newText.trim() })
+                method: 'PUT', body: JSON.stringify(body)
             });
             showToast('Comment updated');
             openDetail(postId);
@@ -863,9 +1117,11 @@
     }
 
     async function deleteComment(postId, commentId) {
+        const userId = prompt('Your user ID (to verify you are the author or post owner):');
+        if (!userId) return;
         if (!confirm('Delete this comment?')) return;
         try {
-            await request(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE' });
+            await request(`/posts/${postId}/comments/${commentId}?userId=${userId}`, { method: 'DELETE' });
             showToast('Comment deleted');
             openDetail(postId);
             await loadPosts();

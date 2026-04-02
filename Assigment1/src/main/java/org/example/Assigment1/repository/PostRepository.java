@@ -27,4 +27,12 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.id = :id")
     Optional<Post> findByIdWithDetails(@Param("id") Long id);
+
+    // Filtrare dupa tag (dupa numele tag-ului)
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author JOIN p.tags t WHERE LOWER(t.name) = LOWER(:tagName)")
+    List<Post> findByTagName(@Param("tagName") String tagName);
+
+    // Filtrare dupa autor (dupa userId)
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.author.id = :authorId")
+    List<Post> findByAuthorId(@Param("authorId") Long authorId);
 }

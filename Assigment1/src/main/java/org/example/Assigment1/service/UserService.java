@@ -2,6 +2,7 @@ package org.example.Assigment1.service;
 
 import org.example.Assigment1.entity.User;
 import org.example.Assigment1.repository.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,9 +14,11 @@ import java.util.NoSuchElementException;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     public User createUser(String username, String email, String password) {
@@ -25,7 +28,9 @@ public class UserService {
         if (userRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email already in use: " + email);
         }
-        return userRepository.save(new User(username, email, password));
+        // Parola se salveaza criptat cu BCrypt
+        String hashedPassword = passwordEncoder.encode(password);
+        return userRepository.save(new User(username, email, hashedPassword));
     }
 
     @Transactional(readOnly = true)
@@ -52,5 +57,12 @@ public class UserService {
             throw new NoSuchElementException("User not found: " + id);
         }
         userRepository.deleteById(id);
+    }
+
+    // Verifica parola (pentru login sau operatii sensibile)
+    public boolean checkPassword(Long userId, String rawPassword) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User not found: " + userId));
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 }

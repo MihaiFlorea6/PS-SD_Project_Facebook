@@ -32,7 +32,7 @@ public class Post {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private PostStatus status = PostStatus.OPEN;
+    private PostStatus status = PostStatus.JUST_POSTED;
 
     // Campul pentru URL-ul imaginii uploadate (optional)
     @Column(name = "image_url", length = 500)
