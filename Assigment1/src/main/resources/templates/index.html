@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Forum Board</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+    <style>
+        :root {
+          --bg: #0c0c0f;
+          --surface: #141418;
+          --surface2: #1c1c22;
+          --border: #2a2a35;
+          --accent: #7c6af7;
+          --accent2: #f7c26a;
+          --accent3: #6af7b8;
+          --text: #e8e8f0;
+          --muted: #6b6b80;
+          --danger: #f76a6a;
+          --open: #6af7b8;
+          --closed: #f7c26a;
+          --archived: #6a9af7;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: 'Syne', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          overflow-x: hidden;
+        }
+
+        body::before {
+          content: '';
+          position: fixed; inset: 0;
+          background-image:
+            linear-gradient(rgba(124,106,247,.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(124,106,247,.03) 1px, transparent 1px);
+          background-size: 40px 40px;
+          pointer-events: none; z-index: 0;
+        }
+
+        .app { display: flex; height: 100vh; position: relative; z-index: 1; }
+
+        /* ─── SIDEBAR ─── */
+        .sidebar {
+          width: 260px; flex-shrink: 0;
+          background: var(--surface);
+          border-right: 1px solid var(--border);
+          display: flex; flex-direction: column;
+          overflow-y: auto;
+        }
+
+        .logo { padding: 28px 24px 20px; border-bottom: 1px solid var(--border); }
+        .logo h1 {
+          font-size: 1.4rem; font-weight: 800; letter-spacing: -.5px;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .logo p { font-size: .75rem; color: var(--muted); margin-top: 4px; font-family: 'DM Mono', monospace; }
+
+        .nav-section { padding: 20px 16px 8px; }
+        .nav-label { font-size: .65rem; font-weight: 700; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px; padding: 0 8px; }
+
+        .nav-btn {
+          width: 100%; display: flex; align-items: center; gap: 10px;
+          padding: 10px 12px; border-radius: 10px;
+          border: none; background: transparent;
+          color: var(--muted); font-family: 'Syne', sans-serif;
+          font-size: .875rem; font-weight: 600;
+          cursor: pointer; transition: all .2s;
+          text-align: left; margin-bottom: 2px;
+        }
+        .nav-btn:hover { background: var(--surface2); color: var(--text); }
+        .nav-btn.active { background: rgba(124,106,247,.15); color: var(--accent); }
+        .nav-btn .icon { font-size: 1rem; width: 20px; text-align: center; }
+
+        .sidebar-stats { margin-top: auto; padding: 16px; border-top: 1px solid var(--border); }
+        .stat-pill {
+          display: flex; justify-content: space-between;
+          padding: 6px 10px; border-radius: 8px;
+          background: var(--surface2); margin-bottom: 6px; font-size: .75rem;
+        }
+        .stat-pill span:last-child { color: var(--accent); font-weight: 700; font-family: 'DM Mono', monospace; }
+
+        /* ─── MAIN ─── */
+        .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+        .topbar {
+          padding: 16px 28px; border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; gap: 12px;
+          background: var(--surface);
+        }
+        .topbar h2 { font-size: 1.1rem; font-weight: 700; flex: 1; }
+
+        .search-box {
+          display: flex; align-items: center; gap: 8px;
+          background: var(--surface2); border: 1px solid var(--border);
+          border-radius: 10px; padding: 8px 14px; flex: 1; max-width: 320px;
+        }
+        .search-box input {
+          background: none; border: none; outline: none;
+          color: var(--text); font-family: 'Syne', sans-serif;
+          font-size: .875rem; width: 100%;
+        }
+        .search-box input::placeholder { color: var(--muted); }
+
+        .btn {
+          padding: 9px 18px; border-radius: 10px;
+          border: none; font-family: 'Syne', sans-serif;
+          font-size: .875rem; font-weight: 700; cursor: pointer;
+          transition: all .2s; white-space: nowrap;
+        }
+        .btn-primary { background: var(--accent); color: #fff; }
+        .btn-primary:hover { background: #6b5ce7; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(124,106,247,.4); }
+        .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-danger { background: rgba(247,106,106,.15); color: var(--danger); border: 1px solid rgba(247,106,106,.3); }
+        .btn-danger:hover { background: rgba(247,106,106,.25); }
+        .btn-sm { padding: 5px 12px; font-size: .75rem; border-radius: 7px; }
+
+        /* ─── CONTENT ─── */
+        .content { flex: 1; overflow-y: auto; padding: 24px 28px; }
+
+        .filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .filter-pill {
+          padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+          background: var(--surface2); color: var(--muted);
+          font-size: .75rem; font-weight: 700; cursor: pointer;
+          transition: all .2s; font-family: 'Syne', sans-serif;
+        }
+        .filter-pill:hover, .filter-pill.active { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,.1); }
+        .filter-pill.open.active { border-color: var(--open); color: var(--open); background: rgba(106,247,184,.1); }
+        .filter-pill.closed.active { border-color: var(--closed); color: var(--closed); background: rgba(247,194,106,.1); }
+
+        /* ─── POST CARDS ─── */
+        .posts-grid { display: flex; flex-direction: column; gap: 12px; }
+
+        .post-card {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 14px; padding: 20px 24px;
+          cursor: pointer; transition: all .2s;
+          position: relative; overflow: hidden;
+        }
+        .post-card::before {
+          content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+          width: 3px; background: var(--accent);
+          transform: scaleY(0); transform-origin: bottom; transition: transform .2s;
+        }
+        .post-card:hover { border-color: var(--accent); transform: translateX(4px); }
+        .post-card:hover::before { transform: scaleY(1); }
+        .post-card.selected { border-color: var(--accent); background: var(--surface2); }
+        .post-card.selected::before { transform: scaleY(1); }
+
+        .post-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+        .post-header h3 { font-size: 1rem; font-weight: 700; flex: 1; line-height: 1.4; }
+
+        .status-badge {
+          font-size: .65rem; font-weight: 700; padding: 3px 10px;
+          border-radius: 20px; text-transform: uppercase; letter-spacing: 1px;
+          flex-shrink: 0; font-family: 'DM Mono', monospace;
+        }
+        .status-OPEN { background: rgba(106,247,184,.15); color: var(--open); }
+        .status-CLOSED { background: rgba(247,194,106,.15); color: var(--closed); }
+        .status-ARCHIVED { background: rgba(106,154,247,.15); color: var(--archived); }
+
+        /* Imaginea pe card */
+        .post-image {
+          width: calc(100% + 48px); margin: 0 -24px 14px;
+          max-height: 240px; object-fit: cover; display: block;
+        }
+
+        .post-excerpt { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 12px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .post-meta { display: flex; align-items: center; gap: 14px; font-size: .75rem; color: var(--muted); }
+        .post-meta .author { color: var(--accent); font-weight: 600; }
+
+        .post-actions {
+          display: flex; gap: 8px; margin-top: 12px;
+          padding-top: 12px; border-top: 1px solid var(--border);
+          align-items: center;
+        }
+
+        /* ─── LIKE BUTTON ─── */
+        .like-btn {
+          display: flex; align-items: center; gap: 6px;
+          padding: 5px 12px; border-radius: 7px;
+          border: 1px solid var(--border);
+          background: var(--surface2); color: var(--muted);
+          font-family: 'Syne', sans-serif; font-size: .75rem; font-weight: 700;
+          cursor: pointer; transition: all .2s;
+        }
+        .like-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(124,106,247,.1); }
+        .like-btn.liked {
+          background: rgba(124,106,247,.15);
+          border-color: var(--accent);
+          color: var(--accent);
+        }
+        .like-count { font-family: 'DM Mono', monospace; min-width: 8px; }
+
+        /* ─── DETAIL PANEL ─── */
+        .detail-panel {
+          width: 480px; flex-shrink: 0;
+          background: var(--surface); border-left: 1px solid var(--border);
+          display: flex; flex-direction: column; transition: width .3s;
+        }
+        .detail-panel.hidden { width: 0; overflow: hidden; }
+
+        .detail-header {
+          padding: 20px 24px; border-bottom: 1px solid var(--border);
+          display: flex; align-items: center; gap: 12px;
+        }
+        .detail-header h3 { flex: 1; font-size: 1rem; font-weight: 700; }
+
+        .detail-body { flex: 1; overflow-y: auto; padding: 24px; }
+        .detail-body .full-content { font-size: .9rem; line-height: 1.8; color: #c0c0d0; margin-bottom: 24px; }
+
+        /* Imaginea in detail panel */
+        .detail-image {
+          width: calc(100% + 48px); margin: -24px -24px 20px;
+          max-height: 200px; object-fit: cover; display: block;
+        }
+
+        .comments-section h4 {
+          font-size: .85rem; font-weight: 700; color: var(--muted);
+          letter-spacing: 1px; text-transform: uppercase; margin-bottom: 16px;
+        }
+
+        .comment-card {
+          background: var(--surface2); border-radius: 10px;
+          padding: 14px 16px; margin-bottom: 10px;
+          border: 1px solid var(--border); transition: border-color .2s;
+        }
+        .comment-card:hover { border-color: var(--accent); }
+        .comment-author { font-size: .75rem; font-weight: 700; color: var(--accent); margin-bottom: 2px; }
+        /* DATA COMPLETA: zi.luna.an ora:min:sec */
+        .comment-date {
+          font-size: .68rem; color: var(--muted);
+          font-family: 'DM Mono', monospace; margin-bottom: 6px;
+        }
+        .comment-text { font-size: .85rem; color: var(--muted); line-height: 1.6; }
+        .comment-actions { display: flex; gap: 6px; margin-top: 10px; }
+
+        .comment-footer { padding: 16px 24px; border-top: 1px solid var(--border); }
+        .comment-input-row { display: flex; gap: 8px; }
+        .comment-input-row input {
+          flex: 1; background: var(--surface2); border: 1px solid var(--border);
+          border-radius: 10px; padding: 10px 14px;
+          color: var(--text); font-family: 'Syne', sans-serif; font-size: .875rem;
+          outline: none; transition: border-color .2s;
+        }
+        .comment-input-row input:focus { border-color: var(--accent); }
+
+        /* ─── MODAL ─── */
+        .modal-overlay {
+          position: fixed; inset: 0; z-index: 100;
+          background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0; pointer-events: none; transition: opacity .2s;
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+        .modal {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 20px; padding: 32px; width: 520px; max-width: 90vw;
+          transform: translateY(20px); transition: transform .2s;
+          max-height: 90vh; overflow-y: auto;
+        }
+        .modal-overlay.open .modal { transform: translateY(0); }
+
+        .modal h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 24px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: .75rem; font-weight: 700; color: var(--muted); margin-bottom: 8px; letter-spacing: .5px; }
+        .form-group input, .form-group textarea, .form-group select {
+          width: 100%; background: var(--surface2);
+          border: 1px solid var(--border); border-radius: 10px;
+          padding: 12px 14px; color: var(--text);
+          font-family: 'Syne', sans-serif; font-size: .875rem;
+          outline: none; transition: border-color .2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--accent); }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+        .form-group select option { background: var(--surface2); }
+
+        /* Upload imagine */
+        .upload-area {
+          border: 2px dashed var(--border); border-radius: 10px;
+          padding: 24px; text-align: center; cursor: pointer;
+          color: var(--muted); font-size: .85rem;
+          transition: border-color .2s, background .2s;
+        }
+        .upload-area:hover { border-color: var(--accent); background: rgba(124,106,247,.05); color: var(--accent); }
+        .upload-area input[type="file"] { display: none; }
+        .upload-preview {
+          max-width: 100%; max-height: 150px; border-radius: 8px;
+          margin-top: 12px; display: none; object-fit: cover;
+        }
+
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+        /* ─── TOAST ─── */
+        .toast {
+          position: fixed; bottom: 28px; right: 28px; z-index: 200;
+          background: var(--surface2); border: 1px solid var(--border);
+          border-radius: 12px; padding: 14px 20px;
+          font-size: .875rem; font-weight: 600;
+          transform: translateY(80px); opacity: 0;
+          transition: all .3s; max-width: 320px;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-color: var(--open); color: var(--open); }
+        .toast.error { border-color: var(--danger); color: var(--danger); }
+
+        .empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+        .empty .icon { font-size: 3rem; margin-bottom: 16px; opacity: .5; }
+        .empty p { font-size: .9rem; }
+
+        .spinner {
+          width: 20px; height: 20px; border: 2px solid var(--border);
+          border-top-color: var(--accent); border-radius: 50%;
+          animation: spin .8s linear infinite; display: inline-block;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ─── USERS ─── */
+        .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+        .user-card {
+          background: var(--surface); border: 1px solid var(--border);
+          border-radius: 14px; padding: 20px; transition: all .2s;
+        }
+        .user-card:hover { border-color: var(--accent2); transform: translateY(-2px); }
+        .user-avatar {
+          width: 48px; height: 48px; border-radius: 50%;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          display: flex; align-items: center; justify-content: center;
+          font-weight: 800; font-size: 1.1rem; margin-bottom: 12px;
+        }
+        .user-name { font-weight: 700; margin-bottom: 4px; }
+        .user-email { font-size: .75rem; color: var(--muted); margin-bottom: 14px; font-family: 'DM Mono', monospace; }
+        .user-actions { display: flex; gap: 6px; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .post-card, .user-card { animation: fadeSlideIn .3s ease both; }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <!-- ─── SIDEBAR ─── -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h1>ForumBoard</h1>
+            <p>Assignment 1 — Spring Boot</p>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Navigation</div>
+            <button class="nav-btn active" onclick="switchTab('posts')" id="nav-posts">
+                <span class="icon">&#9632;</span> Posts
+            </button>
+            <button class="nav-btn" onclick="switchTab('users')" id="nav-users">
+                <span class="icon">&#9670;</span> Users
+            </button>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-label">Quick Filters</div>
+            <button class="nav-btn" onclick="filterByStatus('OPEN')">
+                <span class="icon" style="color:var(--open)">&#9679;</span> Open Posts
+            </button>
+            <button class="nav-btn" onclick="filterByStatus('CLOSED')">
+                <span class="icon" style="color:var(--closed)">&#9679;</span> Closed Posts
+            </button>
+            <button class="nav-btn" onclick="filterByStatus('ARCHIVED')">
+                <span class="icon" style="color:var(--archived)">&#9679;</span> Archived Posts
+            </button>
+        </div>
+
+        <div class="sidebar-stats">
+            <div class="stat-pill"><span>Total Posts</span><span id="stat-posts">0</span></div>
+            <div class="stat-pill"><span>Total Users</span><span id="stat-users">0</span></div>
+            <div class="stat-pill"><span>Open</span><span id="stat-open" style="color:var(--open)">0</span></div>
+        </div>
+    </aside>
+
+    <!-- ─── MAIN ─── -->
+    <main class="main">
+        <div class="topbar">
+            <h2 id="page-title">Posts</h2>
+            <div class="search-box" id="search-box">
+                <span style="color:var(--muted);font-size:.9rem">&#9906;</span>
+                <input type="text" id="search-input" placeholder="Search by title or username..." oninput="handleSearch()"/>
+            </div>
+            <button class="btn btn-primary" onclick="openCreateModal()" id="create-btn">+ New Post</button>
+        </div>
+
+        <div class="content">
+            <div id="posts-view">
+                <div class="filters">
+                    <button class="filter-pill active" onclick="setFilter('ALL', this)">All</button>
+                    <button class="filter-pill open" onclick="setFilter('OPEN', this)">Open</button>
+                    <button class="filter-pill closed" onclick="setFilter('CLOSED', this)">Closed</button>
+                    <button class="filter-pill" onclick="setFilter('ARCHIVED', this)">Archived</button>
+                </div>
+                <div class="posts-grid" id="posts-container">
+                    <div class="empty"><div class="icon">&#9632;</div><p>Loading posts...</p></div>
+                </div>
+            </div>
+
+            <div id="users-view" style="display:none">
+                <div class="users-grid" id="users-container">
+                    <div class="empty"><div class="icon">&#9670;</div><p>Loading users...</p></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ─── DETAIL PANEL ─── -->
+    <aside class="detail-panel hidden" id="detail-panel">
+        <div class="detail-header">
+            <h3 id="detail-title">Post Details</h3>
+            <button class="btn btn-sm btn-secondary" onclick="closeDetail()">&#10005;</button>
+        </div>
+        <div class="detail-body" id="detail-body">
+            <div class="empty"><p>Select a post to view details</p></div>
+        </div>
+        <div class="comment-footer" id="comment-footer" style="display:none">
+            <div class="comment-input-row">
+                <input type="text" id="comment-input" placeholder="Write a comment..."/>
+                <button class="btn btn-primary btn-sm" onclick="submitComment()">Post</button>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- ─── POST MODAL ─── -->
+<div class="modal-overlay" id="post-modal">
+    <div class="modal">
+        <h3 id="modal-title">New Post</h3>
+        <div class="form-group">
+            <label>TITLE</label>
+            <input type="text" id="post-title" placeholder="Enter post title..."/>
+        </div>
+        <div class="form-group">
+            <label>CONTENT</label>
+            <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+        </div>
+        <div class="form-group" id="author-group">
+            <label>AUTHOR ID</label>
+            <input type="number" id="post-author" placeholder="User ID"/>
+        </div>
+        <div class="form-group" id="status-group" style="display:none">
+            <label>STATUS</label>
+            <select id="post-status">
+                <option value="OPEN">Open</option>
+                <option value="CLOSED">Closed</option>
+                <option value="ARCHIVED">Archived</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>IMAGE (optional)</label>
+            <div class="upload-area" onclick="document.getElementById('imageUpload').click()">
+                <div id="uploadText">&#128247; Click to select an image<br><small>JPG, PNG, GIF, WEBP</small></div>
+                <input type="file" id="imageUpload" accept="image/*" onchange="previewImage(event)"/>
+                <img id="uploadPreview" class="upload-preview" alt="Preview"/>
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('post-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="savePost()" id="save-post-btn">Create Post</button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── USER MODAL ─── -->
+<div class="modal-overlay" id="user-modal">
+    <div class="modal">
+        <h3 id="user-modal-title">New User</h3>
+        <div class="form-group">
+            <label>USERNAME</label>
+            <input type="text" id="user-username" placeholder="Choose a username..."/>
+        </div>
+        <div class="form-group">
+            <label>EMAIL</label>
+            <input type="email" id="user-email" placeholder="your@email.com"/>
+        </div>
+        <div class="form-group" id="user-password-group">
+            <label>PASSWORD</label>
+            <input type="password" id="user-password" placeholder="Password..."/>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('user-modal')">Cancel</button>
+            <button class="btn btn-primary" onclick="saveUser()" id="save-user-btn">Create User</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    const API = '/api';
+    let currentTab = 'posts';
+    let currentFilter = 'ALL';
+    let currentPostId = null;
+    let editingPostId = null;
+    let editingUserId = null;
+    let allPosts = [];
+    let allUsers = [];
+    let searchTimeout = null;
+
+    // Like-uri stocate local per sesiune
+    const likesData = {};
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        loadPosts();
+        loadUsers();
+    });
+
+    // ─── API ─────────────────────────────────────────────────────────────────
+    async function request(url, options = {}) {
+        const res = await fetch(API + url, {
+            headers: { 'Content-Type': 'application/json' },
+            ...options,
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || 'Request failed');
+        }
+        if (res.status === 204) return null;
+        return res.json().catch(() => null);
+    }
+
+    // ─── DATE FORMATTERS ─────────────────────────────────────────────────────
+
+    // Data completa: zi.luna.an ora:min:sec  — pentru comentarii
+    function formatDateFull(d) {
+        if (!d) return '';
+        const dt = new Date(d);
+        if (isNaN(dt)) return String(d);
+        const z = n => String(n).padStart(2, '0');
+        return `${z(dt.getDate())}.${z(dt.getMonth()+1)}.${dt.getFullYear()} ${z(dt.getHours())}:${z(dt.getMinutes())}:${z(dt.getSeconds())}`;
+    }
+
+    // Data scurta pentru carduri
+    function formatDate(d) {
+        if (!d) return '';
+        return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    // ─── TOAST ───────────────────────────────────────────────────────────────
+    function showToast(msg, type = 'success') {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = `toast ${type} show`;
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ─── LIKE ────────────────────────────────────────────────────────────────
+    function toggleLike(event, postId) {
+        event.stopPropagation();
+        if (!likesData[postId]) likesData[postId] = { liked: false, count: 0 };
+        likesData[postId].liked = !likesData[postId].liked;
+        likesData[postId].count += likesData[postId].liked ? 1 : -1;
+        if (likesData[postId].count < 0) likesData[postId].count = 0;
+
+        const btn = document.getElementById('like-btn-' + postId);
+        const cnt = document.getElementById('like-count-' + postId);
+        if (btn) btn.classList.toggle('liked', likesData[postId].liked);
+        if (cnt) cnt.textContent = likesData[postId].count > 0 ? likesData[postId].count : '';
+    }
+
+    // ─── TAB SWITCHING ───────────────────────────────────────────────────────
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('posts-view').style.display = tab === 'posts' ? '' : 'none';
+        document.getElementById('users-view').style.display = tab === 'users' ? '' : 'none';
+        document.getElementById('nav-posts').classList.toggle('active', tab === 'posts');
+        document.getElementById('nav-users').classList.toggle('active', tab === 'users');
+        document.getElementById('page-title').textContent = tab === 'posts' ? 'Posts' : 'Users';
+        document.getElementById('search-box').style.display = tab === 'posts' ? '' : 'none';
+        document.getElementById('create-btn').textContent = tab === 'posts' ? '+ New Post' : '+ New User';
+        document.getElementById('create-btn').onclick = tab === 'posts' ? openCreateModal : openCreateUserModal;
+        if (tab === 'users') { closeDetail(); renderUsers(allUsers); }
+        else renderPosts(getFilteredPosts());
+    }
+
+    // ─── POSTS ────────────────────────────────────────────────────────────────
+    async function loadPosts() {
+        try {
+            allPosts = await request('/posts');
+            updateStats();
+            renderPosts(getFilteredPosts());
+        } catch (e) {
+            document.getElementById('posts-container').innerHTML =
+                `<div class="empty"><div class="icon">&#9888;</div><p>Could not load posts. Is the server running?</p></div>`;
+        }
+    }
+
+    function getFilteredPosts() {
+        if (currentFilter === 'ALL') return allPosts;
+        return allPosts.filter(p => p.status === currentFilter);
+    }
+
+    function setFilter(status, el) {
+        currentFilter = status;
+        document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        renderPosts(getFilteredPosts());
+    }
+
+    function filterByStatus(status) {
+        switchTab('posts');
+        currentFilter = status;
+        document.querySelectorAll('.filter-pill').forEach(p => {
+            p.classList.toggle('active', p.textContent.trim().toUpperCase() === status);
+        });
+        renderPosts(getFilteredPosts());
+    }
+
+    // Search dupa titlu SAU username autor (backend face cautarea)
+    function handleSearch() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(async () => {
+            const q = document.getElementById('search-input').value.trim();
+            if (!q) { renderPosts(getFilteredPosts()); return; }
+            try {
+                const results = await request(`/posts?search=${encodeURIComponent(q)}`);
+                renderPosts(results);
+            } catch(e) {}
+        }, 300);
+    }
+
+    function renderPosts(posts) {
+        const c = document.getElementById('posts-container');
+        if (!posts || posts.length === 0) {
+            c.innerHTML = `<div class="empty"><div class="icon">&#9632;</div><p>No posts found.</p></div>`;
+            return;
+        }
+        c.innerHTML = posts.map((p, i) => {
+            const likeState = likesData[p.id] || { liked: false, count: 0 };
+            const imgHtml = p.imageUrl
+                ? `<img src="${p.imageUrl}" class="post-image" alt="Post image" onerror="this.style.display='none'">`
+                : '';
+            return `
+            <div class="post-card${currentPostId === p.id ? ' selected' : ''}"
+                 onclick="openDetail(${p.id})"
+                 style="animation-delay:${i * 0.04}s">
+              <div class="post-header">
+                <h3>${escHtml(p.title)}</h3>
+                <span class="status-badge status-${p.status}">${p.status}</span>
+              </div>
+              ${imgHtml}
+              <p class="post-excerpt">${escHtml(p.content)}</p>
+              <div class="post-meta">
+                <span class="author">${p.author ? p.author.username : 'Unknown'}</span>
+                <span>&#9656; ${(p.comments || []).length} comments</span>
+                <span>${formatDate(p.createdAt)}</span>
+              </div>
+              <div class="post-actions" onclick="event.stopPropagation()">
+                <button class="like-btn${likeState.liked ? ' liked' : ''}"
+                        id="like-btn-${p.id}"
+                        onclick="toggleLike(event, ${p.id})">
+                  &#9829; Like <span class="like-count" id="like-count-${p.id}">${likeState.count > 0 ? likeState.count : ''}</span>
+                </button>
+                <button class="btn btn-sm btn-secondary" onclick="openEditModal(${p.id})">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deletePost(${p.id})">Delete</button>
+              </div>
+            </div>`;
+        }).join('');
+    }
+
+    function updateStats() {
+        document.getElementById('stat-posts').textContent = allPosts.length;
+        document.getElementById('stat-open').textContent = allPosts.filter(p => p.status === 'OPEN').length;
+    }
+
+    // ─── POST CRUD ────────────────────────────────────────────────────────────
+    function openCreateModal() {
+        editingPostId = null;
+        document.getElementById('modal-title').textContent = 'New Post';
+        document.getElementById('save-post-btn').textContent = 'Create Post';
+        document.getElementById('post-title').value = '';
+        document.getElementById('post-content').value = '';
+        document.getElementById('post-author').value = '';
+        document.getElementById('author-group').style.display = '';
+        document.getElementById('status-group').style.display = 'none';
+        document.getElementById('uploadPreview').style.display = 'none';
+        document.getElementById('uploadText').style.display = 'block';
+        document.getElementById('imageUpload').value = '';
+        document.getElementById('post-modal').classList.add('open');
+    }
+
+    function openEditModal(id) {
+        const post = allPosts.find(p => p.id === id);
+        if (!post) return;
+        editingPostId = id;
+        document.getElementById('modal-title').textContent = 'Edit Post';
+        document.getElementById('save-post-btn').textContent = 'Save Changes';
+        document.getElementById('post-title').value = post.title;
+        document.getElementById('post-content').value = post.content;
+        document.getElementById('author-group').style.display = 'none';
+        document.getElementById('status-group').style.display = '';
+        document.getElementById('post-status').value = post.status;
+        document.getElementById('uploadPreview').style.display = 'none';
+        document.getElementById('uploadText').style.display = 'block';
+        document.getElementById('post-modal').classList.add('open');
+    }
+
+    function previewImage(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const preview = document.getElementById('uploadPreview');
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        document.getElementById('uploadText').style.display = 'none';
+    }
+
+    async function savePost() {
+        const title = document.getElementById('post-title').value.trim();
+        const content = document.getElementById('post-content').value.trim();
+        if (!title || !content) { showToast('Title and content are required', 'error'); return; }
+
+        try {
+            if (editingPostId) {
+                const status = document.getElementById('post-status').value;
+                await request(`/posts/${editingPostId}`, { method: 'PUT', body: JSON.stringify({ title, content, status }) });
+                showToast('Post updated successfully');
+            } else {
+                const authorId = parseInt(document.getElementById('post-author').value);
+                if (!authorId) { showToast('Author ID is required', 'error'); return; }
+
+                // Upload imagine optional
+                let imageUrl = null;
+                const fileInput = document.getElementById('imageUpload');
+                if (fileInput.files.length > 0) {
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    try {
+                        const imgRes = await fetch(`${API}/images/upload`, { method: 'POST', body: formData });
+                        if (imgRes.ok) { const d = await imgRes.json(); imageUrl = d.url; }
+                    } catch(e) { console.warn('Image upload failed'); }
+                }
+
+                const body = { title, content, authorId };
+                if (imageUrl) body.imageUrl = imageUrl;
+                await request('/posts', { method: 'POST', body: JSON.stringify(body) });
+                showToast('Post created successfully');
+            }
+            closeModal('post-modal');
+            await loadPosts();
+            if (currentPostId) openDetail(currentPostId);
+        } catch(e) {
+            showToast(e.message, 'error');
+        }
+    }
+
+    async function deletePost(id) {
+        if (!confirm('Delete this post?')) return;
+        try {
+            await request(`/posts/${id}`, { method: 'DELETE' });
+            showToast('Post deleted');
+            if (currentPostId === id) closeDetail();
+            await loadPosts();
+            renderPosts(getFilteredPosts());
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ─── DETAIL / COMMENTS ────────────────────────────────────────────────────
+    async function openDetail(id) {
+        currentPostId = id;
+        renderPosts(getFilteredPosts());
+        document.getElementById('detail-panel').classList.remove('hidden');
+        document.getElementById('detail-body').innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+        document.getElementById('comment-footer').style.display = 'none';
+
+        try {
+            const [post, comments] = await Promise.all([
+                request(`/posts/${id}`),
+                request(`/posts/${id}/comments`)
+            ]);
+            document.getElementById('detail-title').textContent = post.title;
+            document.getElementById('comment-footer').style.display = '';
+
+            // Imaginea in panoul de detalii
+            const detailImg = post.imageUrl
+                ? `<img src="${post.imageUrl}" class="detail-image" alt="Post image" onerror="this.style.display='none'">`
+                : '';
+
+            const commentsHtml = comments.length === 0
+                ? '<p style="color:var(--muted);font-size:.85rem">No comments yet. Be the first!</p>'
+                : comments.map(c => `
+                    <div class="comment-card">
+                      <div class="comment-author">${c.author ? c.author.username : 'Unknown'}</div>
+                      <div class="comment-date">&#128336; ${formatDateFull(c.createdAt)}</div>
+                      <div class="comment-text">${escHtml(c.content)}</div>
+                      <div class="comment-actions">
+                        <button class="btn btn-sm btn-secondary" onclick="editComment(${id}, ${c.id}, \`${escAttr(c.content)}\`)">Edit</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteComment(${id}, ${c.id})">Delete</button>
+                      </div>
+                    </div>`).join('');
+
+            document.getElementById('detail-body').innerHTML = `
+                ${detailImg}
+                <div class="full-content">${escHtml(post.content)}</div>
+                <div class="post-meta" style="margin-bottom:20px">
+                  <span class="author">${post.author ? post.author.username : 'Unknown'}</span>
+                  <span class="status-badge status-${post.status}">${post.status}</span>
+                  <span style="color:var(--muted)">${formatDate(post.createdAt)}</span>
+                </div>
+                <div class="comments-section">
+                  <h4>Comments (${comments.length})</h4>
+                  ${commentsHtml}
+                </div>`;
+        } catch(e) {
+            document.getElementById('detail-body').innerHTML = `<div class="empty"><p>Failed to load post.</p></div>`;
+        }
+    }
+
+    function closeDetail() {
+        currentPostId = null;
+        document.getElementById('detail-panel').classList.add('hidden');
+        renderPosts(getFilteredPosts());
+    }
+
+    async function submitComment() {
+        const input = document.getElementById('comment-input');
+        const content = input.value.trim();
+        if (!content) return;
+        const authorId = prompt('Your user ID?');
+        if (!authorId) return;
+        try {
+            await request(`/posts/${currentPostId}/comments`, {
+                method: 'POST',
+                body: JSON.stringify({ authorId: parseInt(authorId), content })
+            });
+            input.value = '';
+            showToast('Comment posted');
+            openDetail(currentPostId);
+            await loadPosts();
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function editComment(postId, commentId, currentText) {
+        const newText = prompt('Edit comment:', currentText);
+        if (!newText || newText.trim() === currentText) return;
+        try {
+            await request(`/posts/${postId}/comments/${commentId}`, {
+                method: 'PUT', body: JSON.stringify({ content: newText.trim() })
+            });
+            showToast('Comment updated');
+            openDetail(postId);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function deleteComment(postId, commentId) {
+        if (!confirm('Delete this comment?')) return;
+        try {
+            await request(`/posts/${postId}/comments/${commentId}`, { method: 'DELETE' });
+            showToast('Comment deleted');
+            openDetail(postId);
+            await loadPosts();
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ─── USERS ────────────────────────────────────────────────────────────────
+    async function loadUsers() {
+        try {
+            allUsers = await request('/users');
+            document.getElementById('stat-users').textContent = allUsers.length;
+            if (currentTab === 'users') renderUsers(allUsers);
+        } catch(e) {}
+    }
+
+    function renderUsers(users) {
+        const c = document.getElementById('users-container');
+        if (!users || users.length === 0) {
+            c.innerHTML = `<div class="empty"><div class="icon">&#9670;</div><p>No users found.</p></div>`;
+            return;
+        }
+        c.innerHTML = users.map((u, i) => `
+            <div class="user-card" style="animation-delay:${i * 0.05}s">
+              <div class="user-avatar">${u.username.charAt(0).toUpperCase()}</div>
+              <div class="user-name">${escHtml(u.username)}</div>
+              <div class="user-email">${escHtml(u.email)}</div>
+              <div class="user-actions">
+                <button class="btn btn-sm btn-secondary" onclick="openEditUserModal(${u.id})">Edit</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteUser(${u.id})">Delete</button>
+              </div>
+            </div>`).join('');
+    }
+
+    function openCreateUserModal() {
+        editingUserId = null;
+        document.getElementById('user-modal-title').textContent = 'New User';
+        document.getElementById('save-user-btn').textContent = 'Create User';
+        document.getElementById('user-username').value = '';
+        document.getElementById('user-email').value = '';
+        document.getElementById('user-password').value = '';
+        document.getElementById('user-password-group').style.display = '';
+        document.getElementById('user-modal').classList.add('open');
+    }
+
+    function openEditUserModal(id) {
+        const user = allUsers.find(u => u.id === id);
+        if (!user) return;
+        editingUserId = id;
+        document.getElementById('user-modal-title').textContent = 'Edit User';
+        document.getElementById('save-user-btn').textContent = 'Save Changes';
+        document.getElementById('user-username').value = user.username;
+        document.getElementById('user-email').value = user.email;
+        document.getElementById('user-password-group').style.display = 'none';
+        document.getElementById('user-modal').classList.add('open');
+    }
+
+    async function saveUser() {
+        const username = document.getElementById('user-username').value.trim();
+        const email = document.getElementById('user-email').value.trim();
+        if (!username || !email) { showToast('Username and email are required', 'error'); return; }
+        try {
+            if (editingUserId) {
+                await request(`/users/${editingUserId}`, { method: 'PUT', body: JSON.stringify({ username, email }) });
+                showToast('User updated');
+            } else {
+                const password = document.getElementById('user-password').value;
+                if (!password) { showToast('Password is required', 'error'); return; }
+                await request('/users', { method: 'POST', body: JSON.stringify({ username, email, password }) });
+                showToast('User created');
+            }
+            closeModal('user-modal');
+            await loadUsers();
+            renderUsers(allUsers);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function deleteUser(id) {
+        if (!confirm('Delete this user? All their posts will also be deleted.')) return;
+        try {
+            await request(`/users/${id}`, { method: 'DELETE' });
+            showToast('User deleted');
+            await loadUsers();
+            await loadPosts();
+            renderUsers(allUsers);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    // ─── UTILS ────────────────────────────────────────────────────────────────
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    });
+
+    function escHtml(s) {
+        if (!s) return '';
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escAttr(s) {
+        if (!s) return '';
+        return s.replace(/`/g, '\\`');
+    }
+</script>
+</body>
+</html>
