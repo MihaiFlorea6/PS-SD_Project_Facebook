@@ -427,7 +427,6 @@
 <body>
 <div class="app">
 
-    <!-- ─── SIDEBAR ─── -->
     <aside class="sidebar">
         <div class="logo">
             <h1>ForumBoard</h1>
@@ -472,7 +471,6 @@
         </div>
     </aside>
 
-    <!-- ─── MAIN ─── -->
     <main class="main">
         <div class="topbar">
             <h2 id="page-title">Posts</h2>
@@ -485,7 +483,6 @@
 
         <div class="content">
             <div id="posts-view">
-                <!-- Tag filter active banner -->
                 <div class="tag-filter-banner" id="tag-filter-banner">
                     <span>&#127991;</span>
                     <span id="tag-filter-label">Filtering by tag</span>
@@ -511,7 +508,6 @@
         </div>
     </main>
 
-    <!-- ─── DETAIL PANEL ─── -->
     <aside class="detail-panel hidden" id="detail-panel">
         <div class="detail-header">
             <h3 id="detail-title">Post Details</h3>
@@ -529,7 +525,6 @@
     </aside>
 </div>
 
-<!-- ─── POST MODAL ─── -->
 <div class="modal-overlay" id="post-modal">
     <div class="modal">
         <h3 id="modal-title">New Post</h3>
@@ -577,7 +572,6 @@
     </div>
 </div>
 
-<!-- ─── USER MODAL ─── -->
 <div class="modal-overlay" id="user-modal">
     <div class="modal">
         <h3 id="user-modal-title">New User</h3>
@@ -642,6 +636,13 @@
     // ─── DATE FORMATTERS ─────────────────────────────────────────────────────
     function formatDateFull(d) {
         if (!d) return '';
+
+        // Daca data vine deja formatata din Java (ex: 02-04-2026 21:15:30), o afisam direct
+        if (typeof d === 'string' && d.includes('-') && d.includes(':')) {
+            return d;
+        }
+
+        // Fallback daca vine altfel
         const dt = new Date(d);
         if (isNaN(dt)) return String(d);
         const z = n => String(n).padStart(2, '0');
@@ -649,8 +650,8 @@
     }
 
     function formatDate(d) {
-        if (!d) return '';
-        return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+        // Folosim functia completa si pentru afisarea scurta de pe carduri
+        return formatDateFull(d);
     }
 
     function statusLabel(s) {

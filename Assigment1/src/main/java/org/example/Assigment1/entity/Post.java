@@ -34,7 +34,7 @@ public class Post {
     @Column(nullable = false)
     private PostStatus status = PostStatus.JUST_POSTED;
 
-    // Campul pentru URL-ul imaginii uploadate (optional)
+
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 

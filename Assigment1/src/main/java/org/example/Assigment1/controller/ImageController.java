@@ -21,8 +21,6 @@ import java.util.UUID;
 @CrossOrigin(origins = "*")
 public class ImageController {
 
-    // Folderul unde se salveaza imaginile - configurat in application.properties
-    // Daca nu e configurat, foloseste "uploads" in directorul curent
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
@@ -37,7 +35,7 @@ public class ImageController {
             return ResponseEntity.badRequest().body(Map.of("error", "Fisierul este gol"));
         }
 
-        // Verifica extensia - acceptam doar imagini
+
         String originalFilename = file.getOriginalFilename();
         if (originalFilename == null) {
             return ResponseEntity.badRequest().body(Map.of("error", "Nume fisier invalid"));
@@ -49,20 +47,20 @@ public class ImageController {
         }
 
         try {
-            // Creeaza folderul daca nu exista
+
             Path uploadPath = Paths.get(uploadDir);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }
 
-            // Genereaza un nume unic pentru fisier pentru a evita conflicte
+
             String uniqueFilename = UUID.randomUUID().toString() + "." + extension;
             Path filePath = uploadPath.resolve(uniqueFilename);
 
-            // Salveaza fisierul
+
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
-            // Returneaza URL-ul imaginii
+
             String imageUrl = "/api/images/" + uniqueFilename;
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                     "url", imageUrl,

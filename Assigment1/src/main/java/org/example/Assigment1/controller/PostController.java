@@ -24,7 +24,7 @@ public class PostController {
         this.postService = postService;
     }
 
-    // ── Post CRUD ──────────────────────────────────────────────
+
 
     @PostMapping
     public ResponseEntity<?> createPost(@RequestBody Map<String, Object> body) {
@@ -88,7 +88,7 @@ public class PostController {
             PostStatus status = body.get("status") != null
                     ? PostStatus.valueOf(body.get("status").toString().toUpperCase()) : null;
 
-            // userId optional pentru verificarea autorului
+
             Long requestingUserId = body.get("userId") != null
                     ? Long.valueOf(body.get("userId").toString()) : null;
 
@@ -114,7 +114,7 @@ public class PostController {
         }
     }
 
-    // Blocare post (seteaza OUTDATED) — doar autorul
+
     @PostMapping("/{id}/lock")
     public ResponseEntity<?> lockPost(@PathVariable Long id, @RequestBody Map<String, Object> body) {
         try {
@@ -128,14 +128,14 @@ public class PostController {
         }
     }
 
-    // ── Tags ───────────────────────────────────────────────────
+
 
     @GetMapping("/tags")
     public ResponseEntity<List<Tag>> getAllTags() {
         return ResponseEntity.ok(postService.getAllTags());
     }
 
-    // ── Comment CRUD ───────────────────────────────────────────
+
 
     @PostMapping("/{postId}/comments")
     public ResponseEntity<?> addComment(@PathVariable Long postId, @RequestBody Map<String, Object> body) {

@@ -13,26 +13,30 @@ import java.util.Optional;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
 
-    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author")
+
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author ORDER BY p.createdAt DESC, p.id DESC")
     List<Post> findAllWithDetails();
 
-    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.status = :status")
+
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.status = :status ORDER BY p.createdAt DESC, p.id DESC")
     List<Post> findByStatus(@Param("status") PostStatus status);
 
-    // Cauta dupa titlu SAU dupa username-ul autorului
+
     @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author a " +
             "WHERE LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-            "OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+            "OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "ORDER BY p.createdAt DESC, p.id DESC")
     List<Post> searchByTitleOrAuthor(@Param("keyword") String keyword);
+
 
     @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.id = :id")
     Optional<Post> findByIdWithDetails(@Param("id") Long id);
 
-    // Filtrare dupa tag (dupa numele tag-ului)
-    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author JOIN p.tags t WHERE LOWER(t.name) = LOWER(:tagName)")
+
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author JOIN p.tags t WHERE LOWER(t.name) = LOWER(:tagName) ORDER BY p.createdAt DESC, p.id DESC")
     List<Post> findByTagName(@Param("tagName") String tagName);
 
-    // Filtrare dupa autor (dupa userId)
-    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.author.id = :authorId")
+
+    @Query("SELECT DISTINCT p FROM Post p JOIN FETCH p.author WHERE p.author.id = :authorId ORDER BY p.createdAt DESC, p.id DESC")
     List<Post> findByAuthorId(@Param("authorId") Long authorId);
 }
