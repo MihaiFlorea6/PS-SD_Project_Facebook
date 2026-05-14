@@ -1,0 +1,161 @@
+<div class="page-container" *ngIf="!loading; else loadingBlock">
+  <div *ngIf="post" class="post-detail">
+
+    <!-- Back button -->
+    <a routerLink="/posts" class="back-link">← Înapoi la postări</a>
+
+    <!-- Moderator indicator -->
+    <div class="mod-banner" *ngIf="isModerator && !isPostAuthor()">
+       Vizualizezi ca moderator — poți edita sau șterge această postare
+    </div>
+
+    <!-- Post Header -->
+    <div class="post-header">
+      <div class="status-row">
+        <span class="status-badge" [class]="'status-' + post.status.toLowerCase()">
+          {{ getStatusLabel(post.status) }}
+        </span>
+        <span class="post-date">{{ post.createdAt | date:'dd MMMM yyyy, HH:mm' }}</span>
+      </div>
+
+      <h1 class="post-title">{{ post.title }}</h1>
+
+      <div class="author-row">
+        <span class="author-name">{{ post.author.username }}</span>
+        <span class="author-score"> Scor: {{ voteService.getUserScore(post.author.id) }}</span>
+      </div>
+
+      <div class="post-tags" *ngIf="post.tags && post.tags.length > 0">
+        <span *ngFor="let tag of post.tags" class="tag-chip">#{{ tag.name }}</span>
+      </div>
+    </div>
+
+    <!-- Post Image -->
+    <div class="post-image" *ngIf="post.imageUrl">
+      <img [src]="'http://localhost:8080' + post.imageUrl" alt="Post image" />
+    </div>
+
+    <!-- Post Content -->
+    <div class="post-content">{{ post.content }}</div>
+
+    <!-- Post Actions + Vote -->
+    <div class="post-actions-bar">
+      <div class="vote-section">
+        <button
+          class="vote-btn up"
+          [class.voted]="getPostUserVote() === 'UP'"
+          (click)="votePost('UP')"
+        > Like</button>
+        <span class="vote-count" [class.positive]="getPostVoteCount() > 0" [class.negative]="getPostVoteCount() < 0">
+          {{ getPostVoteCount() }}
+        </span>
+        <button
+          class="vote-btn down"
+          [class.voted]="getPostUserVote() === 'DOWN'"
+          (click)="votePost('DOWN')"
+        > Dislike</button>
+      </div>
+
+      <!-- Actiuni: autorul sau moderatorul -->
+      <div class="author-actions" *ngIf="isPostAuthor() || isModerator">
+        <a [routerLink]="['/posts', post.id, 'edit']" class="btn-edit">Editează</a>
+        <button (click)="lockPost()" class="btn-lock"
+                *ngIf="isPostAuthor() && post.status !== 'OUTDATED'">
+          Blochează comentarii
+        </button>
+        <button (click)="deletePost()" class="btn-delete">Șterge</button>
+      </div>
+    </div>
+
+    <!-- Comments Section -->
+    <div class="comments-section">
+      <h2 class="comments-title">
+        Comentarii ({{ comments.length }})
+      </h2>
+
+      <!-- Add comment form -->
+      <div class="add-comment" *ngIf="canComment(); else lockedBlock">
+        <textarea
+          [(ngModel)]="newCommentContent"
+          placeholder="Adaugă un comentariu..."
+          rows="3"
+        ></textarea>
+        <button (click)="addComment()" [disabled]="submittingComment" class="btn-primary">
+          {{ submittingComment ? 'Se trimite...' : 'Adaugă comentariu' }}
+        </button>
+      </div>
+
+      <ng-template #lockedBlock>
+        <div class="locked-notice" *ngIf="post.status === 'OUTDATED'">
+          Comentariile sunt blocate pentru această postare.
+        </div>
+        <div class="locked-notice" *ngIf="!currentUser">
+          Trebuie să fii autentificat pentru a comenta.
+        </div>
+      </ng-template>
+
+      <!-- Comments List -->
+      <div *ngIf="comments.length === 0" class="no-comments">
+        Niciun comentariu încă. Fii primul!
+      </div>
+
+      <div *ngFor="let comment of comments" class="comment-card">
+        <div class="comment-header">
+          <div class="comment-author">
+            <span class="author-name">{{ comment.author.username }}</span>
+            <span class="author-score"> {{ voteService.getUserScore(comment.author.id) }}</span>
+          </div>
+          <span class="comment-date">{{ comment.createdAt | date:'dd MMM yyyy, HH:mm' }}</span>
+        </div>
+
+        <!-- Edit mode -->
+        <div *ngIf="editingCommentId === comment.id; else viewMode" class="edit-form">
+          <textarea [(ngModel)]="editingCommentContent" rows="3"></textarea>
+          <div class="edit-actions">
+            <button (click)="saveComment(comment)" class="btn-primary small">Salvează</button>
+            <button (click)="cancelEditComment()" class="btn-cancel small">Anulează</button>
+          </div>
+        </div>
+
+        <ng-template #viewMode>
+          <p class="comment-content">{{ comment.content }}</p>
+        </ng-template>
+
+        <div class="comment-footer">
+          <!-- Vote -->
+          <div class="vote-section small">
+            <button
+              class="vote-btn up small"
+              [class.voted]="getCommentUserVote(comment) === 'UP'"
+              (click)="voteComment(comment, 'UP')"
+            >▲</button>
+            <span class="vote-count" [class.positive]="getCommentVoteCount(comment) > 0" [class.negative]="getCommentVoteCount(comment) < 0">
+              {{ getCommentVoteCount(comment) }}
+            </span>
+            <button
+              class="vote-btn down small"
+              [class.voted]="getCommentUserVote(comment) === 'DOWN'"
+              (click)="voteComment(comment, 'DOWN')"
+            >▼</button>
+          </div>
+
+          <!-- Actions: autorul comentariului, autorul postului SAU moderatorul -->
+          <div class="comment-actions"
+               *ngIf="currentUser && (currentUser.id === comment.author.id || isPostAuthor() || isModerator)">
+            <span *ngIf="isModerator && currentUser.id !== comment.author.id && !isPostAuthor()" class="mod-tag small">MOD</span>
+            <button
+              *ngIf="currentUser.id === comment.author.id || isModerator"
+              (click)="startEditComment(comment)"
+              class="btn-edit small"
+            >Editează</button>
+            <button (click)="deleteComment(comment)" class="btn-delete small">Șterge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<ng-template #loadingBlock>
+  <div class="loading-msg">Se încarcă postarea...</div>
+</ng-template>

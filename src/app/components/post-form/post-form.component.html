@@ -1,0 +1,95 @@
+<div class="page-container">
+  <div class="form-card">
+    <div class="form-header">
+      <a routerLink="/posts" class="back-link">← Înapoi</a>
+      <h1>{{ isEdit ? 'Editează postarea' : 'Postare nouă' }}</h1>
+    </div>
+
+    <div *ngIf="loading" class="loading-msg">Se încarcă...</div>
+
+    <form *ngIf="!loading" (ngSubmit)="submit()">
+
+      <!-- Title -->
+      <div class="form-group">
+        <label>Titlu <span class="required">*</span></label>
+        <input
+          type="text"
+          [(ngModel)]="title"
+          name="title"
+          placeholder="Titlul postării..."
+          maxlength="255"
+        />
+      </div>
+
+      <!-- Content -->
+      <div class="form-group">
+        <label>Conținut <span class="required">*</span></label>
+        <textarea
+          [(ngModel)]="content"
+          name="content"
+          placeholder="Scrie conținutul postării..."
+          rows="8"
+        ></textarea>
+      </div>
+
+      <!-- Tags -->
+      <div class="form-group">
+        <label>Tag-uri <span class="required">*</span></label>
+        <div class="tag-input-row">
+          <input
+            type="text"
+            [(ngModel)]="tagInput"
+            name="tagInput"
+            placeholder="Adaugă tag nou..."
+            (keyup.enter)="addTag()"
+          />
+          <button type="button" (click)="addTag()" class="btn-add-tag">+ Adaugă</button>
+        </div>
+        <div class="selected-tags" *ngIf="selectedTags.length > 0">
+          <span *ngFor="let tag of selectedTags" class="tag-chip selected">
+            #{{ tag }}
+            <button type="button" (click)="removeTag(tag)" class="tag-remove">×</button>
+          </span>
+        </div>
+        <div *ngIf="availableTags.length > 0" class="existing-tags">
+          <span class="hint">Tag-uri existente:</span>
+          <button
+            *ngFor="let tag of availableTags"
+            type="button"
+            class="tag-chip existing"
+            [class.selected]="selectedTags.includes(tag.name)"
+            (click)="addExistingTag(tag)"
+          >#{{ tag.name }}</button>
+        </div>
+      </div>
+
+      <!-- Image Upload -->
+      <div class="form-group">
+        <label>Imagine (opțional)</label>
+        <div class="image-upload-area">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+            id="imageInput"
+            style="display:none"
+          />
+          <label for="imageInput" class="btn-upload">
+            📎 Alege imagine
+          </label>
+          <span *ngIf="imageFile" class="file-name">{{ imageFile.name }}</span>
+        </div>
+        <div class="image-preview" *ngIf="imagePreview || existingImageUrl">
+          <img [src]="imagePreview || ('http://localhost:8080' + existingImageUrl)" alt="Preview" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a routerLink="/posts" class="btn-cancel">Anulează</a>
+        <button type="submit" class="btn-primary" [disabled]="submitting">
+          {{ submitting ? (uploadingImage ? 'Se încarcă imaginea...' : 'Se salvează...') : (isEdit ? 'Salvează' : 'Publică') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

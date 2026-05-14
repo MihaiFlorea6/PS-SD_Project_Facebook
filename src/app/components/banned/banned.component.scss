@@ -1,0 +1,84 @@
+.banned-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--bg-dark);
+  background-image: radial-gradient(ellipse at 50% 50%, rgba(239,68,68,0.08) 0%, transparent 70%);
+}
+
+.banned-card {
+  background: var(--bg-card);
+  border: 2px solid rgba(239,68,68,0.4);
+  border-radius: 20px;
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(239,68,68,0.15);
+}
+
+.banned-icon {
+  font-size: 4rem;
+  margin-bottom: 1.25rem;
+  display: block;
+  filter: drop-shadow(0 0 20px rgba(239,68,68,0.4));
+}
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #f87171;
+  margin: 0 0 0.5rem 0;
+}
+
+.banned-subtitle {
+  color: #94a3b8;
+  font-size: 1rem;
+  margin: 0 0 2rem 0;
+}
+
+.banned-description {
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.2);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  text-align: left;
+
+  p {
+    color: #cbd5e1;
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin: 0 0 0.75rem 0;
+
+    &:last-child { margin: 0; }
+
+    &::before {
+      content: '• ';
+      color: #f87171;
+      font-weight: bold;
+    }
+  }
+}
+
+.btn-back {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background: transparent;
+  border: 2px solid #f87171;
+  color: #f87171;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(239,68,68,0.15);
+    transform: translateY(-1px);
+  }
+}

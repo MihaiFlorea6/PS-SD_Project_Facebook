@@ -1,0 +1,46 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <span class="brand-icon">◈</span>
+      <h1>FaceBook</h1>
+      <p>Bine ai revenit!</p>
+    </div>
+
+    <!-- Mesaj ban -->
+    <div class="banned-msg" *ngIf="isBanned">
+      🚫 Contul tău a fost <strong>blocat</strong> de un moderator.<br/>
+      Nu poți accesa aplicația.
+    </div>
+
+    <!-- Eroare normala -->
+    <div class="error-msg" *ngIf="error && !isBanned">{{ error }}</div>
+
+    <div class="form-group">
+      <label>Nume utilizator</label>
+      <input
+        type="text"
+        [(ngModel)]="username"
+        placeholder="username"
+        (keyup.enter)="login()"
+      />
+    </div>
+
+    <div class="form-group">
+      <label>Parolă</label>
+      <input
+        type="password"
+        [(ngModel)]="password"
+        placeholder="••••••••"
+        (keyup.enter)="login()"
+      />
+    </div>
+
+    <button (click)="login()" class="btn-primary" [disabled]="loading">
+      {{ loading ? 'Se conectează...' : 'Autentificare' }}
+    </button>
+
+    <p class="auth-link">
+      Nu ai cont? <a routerLink="/register">Înregistrează-te</a>
+    </p>
+  </div>
+</div>

@@ -1,0 +1,86 @@
+<div class="page-container">
+  <div class="page-header">
+    <div>
+      <h1>Utilizatori</h1>
+      <p class="page-subtitle" *ngIf="isModerator">
+        🛡️ Ești moderator — poți bana/debana utilizatori
+      </p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-msg">Se încarcă utilizatorii...</div>
+
+  <div *ngIf="!loading" class="users-list">
+    <div *ngIf="users.length === 0" class="empty-state">Niciun utilizator găsit.</div>
+
+    <div *ngFor="let user of users" class="user-card"
+         [class.mine]="isCurrentUser(user)"
+         [class.banned]="user.banned"
+         [class.moderator-card]="user.role === 'MODERATOR'">
+
+      <!-- View mode -->
+      <div *ngIf="editingUserId !== user.id; else editMode" class="user-view">
+        <div class="user-avatar" [class.mod-avatar]="user.role === 'MODERATOR'" [class.banned-avatar]="user.banned">
+          {{ user.username.charAt(0).toUpperCase() }}
+        </div>
+        <div class="user-info">
+          <div class="user-header">
+            <span class="user-name">{{ user.username }}</span>
+            <span *ngIf="isCurrentUser(user)" class="you-badge">Tu</span>
+            <span *ngIf="user.role === 'MODERATOR'" class="mod-badge">🛡️ Moderator</span>
+            <span *ngIf="user.banned" class="banned-badge">🚫 Banat</span>
+          </div>
+          <span class="user-email">{{ user.email }}</span>
+          <span class="user-date">Membru din {{ user.createdAt | date:'dd MMM yyyy' }}</span>
+          <span *ngIf="user.banned && user.bannedAt" class="banned-date">
+            Banat la {{ user.bannedAt | date:'dd MMM yyyy, HH:mm' }}
+          </span>
+          <div class="user-score">
+            <span class="score-label">Scor:</span>
+            <span class="score-value"
+                  [class.positive]="voteService.getUserScore(user.id) > 0"
+                  [class.negative]="voteService.getUserScore(user.id) < 0">
+              {{ voteService.getUserScore(user.id) }}
+            </span>
+          </div>
+        </div>
+
+        <div class="user-actions">
+          <!-- Actiuni pentru propriul cont -->
+          <ng-container *ngIf="isCurrentUser(user)">
+            <button (click)="startEdit(user)" class="btn-edit">Editează</button>
+            <button (click)="deleteUser(user)" class="btn-delete">Șterge cont</button>
+          </ng-container>
+
+          <!-- BONUS: Actiuni moderator pentru alti useri -->
+          <ng-container *ngIf="isModerator && !isCurrentUser(user) && user.role !== 'MODERATOR'">
+            <button *ngIf="!user.banned" (click)="banUser(user)" class="btn-ban">
+              🚫 Banează
+            </button>
+            <button *ngIf="user.banned" (click)="unbanUser(user)" class="btn-unban">
+              ✅ Debanează
+            </button>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Edit mode -->
+      <ng-template #editMode>
+        <div class="user-edit">
+          <div class="form-group">
+            <label>Nume utilizator</label>
+            <input type="text" [(ngModel)]="editUsername" name="editUsername" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" [(ngModel)]="editEmail" name="editEmail" />
+          </div>
+          <div class="edit-actions">
+            <button (click)="saveEdit(user)" class="btn-primary">Salvează</button>
+            <button (click)="cancelEdit()" class="btn-cancel">Anulează</button>
+          </div>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>

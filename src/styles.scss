@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg-dark: #0f1117;
+  --bg-card: #161b27;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #eab308;
+  --accent-orange: #f97316;
+  --text-light: #f1f5f9;
+  --text-muted: #94a3b8;
+  --danger: #ef4444;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --info: #7dd3fc;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+// ── Titluri globale mai mari si mai colorate ──────────────────
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+// Titluri de pagina cu gradient auriu
+.page-header h1,
+.page-container > .page-header h1 {
+  background: linear-gradient(135deg, #eab308, #f97316);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 2.2rem;
+}
+
+// Label-uri de formulare — galben vibrant
+label {
+  color: #eab308 !important;
+  font-weight: 600;
+}
+
+// Link-uri — portocaliu vibrant
+a {
+  color: #f97316;
+  &:hover { color: #eab308; }
+}
+
+// Taguri
+.tag-chip {
+  padding: 0.3rem 0.8rem;
+  background: rgba(234,179,8,0.08);
+  border: 1px solid rgba(234,179,8,0.25);
+  border-radius: 20px;
+  color: #eab308;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+
+  &:hover, &.selected {
+    background: var(--accent);
+    color: var(--bg-dark);
+    border-color: var(--accent);
+  }
+
+  &.small {
+    padding: 0.15rem 0.55rem;
+    font-size: 0.75rem;
+    cursor: default;
+  }
+}
+
+// Status badges mai colorate
+.status-badge {
+  padding: 0.22rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &.status-just_posted {
+    background: rgba(59,130,246,0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59,130,246,0.3);
+  }
+  &.status-first_reactions {
+    background: rgba(234,179,8,0.2);
+    color: #fde047;
+    border: 1px solid rgba(234,179,8,0.35);
+  }
+  &.status-outdated {
+    background: rgba(239,68,68,0.15);
+    color: #fca5a5;
+    border: 1px solid rgba(239,68,68,0.25);
+  }
+}
+
+// Mod tag (eticheta moderator pe actiuni)
+.mod-tag {
+  padding: 0.15rem 0.5rem;
+  background: rgba(125,211,252,0.15);
+  color: #7dd3fc;
+  border: 1px solid rgba(125,211,252,0.3);
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+
+  &.small { font-size: 0.65rem; }
+}
+
+// Moderator banner in post detail
+.mod-banner {
+  background: rgba(125,211,252,0.08);
+  border: 1px solid rgba(125,211,252,0.25);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  color: #7dd3fc;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
+  font-weight: 500;
+}
+
+// Indicatorul de moderator in liste
+.mod-indicator {
+  color: #7dd3fc;
+  font-size: 0.875rem;
+  margin: 0.2rem 0 0;
+}
+
+// Scrollbar
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-dark); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+* { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }

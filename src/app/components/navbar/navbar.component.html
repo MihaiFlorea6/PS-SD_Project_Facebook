@@ -1,0 +1,28 @@
+<nav class="navbar">
+  <div class="navbar-brand">
+    <a routerLink="/posts" class="brand-link">
+      <span class="brand-icon">◈</span>
+      <span class="brand-text">FaceBook</span>
+    </a>
+  </div>
+
+  <div class="navbar-links" *ngIf="currentUser">
+    <a routerLink="/posts" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Posts</a>
+    <a routerLink="/posts/new" routerLinkActive="active">New Post</a>
+    <a routerLink="/users" routerLinkActive="active">Users</a>
+  </div>
+
+  <div class="navbar-user" *ngIf="currentUser; else loginBlock">
+    <span class="user-badge">
+      <span class="user-name">{{ currentUser.username }}</span>
+    </span>
+    <button class="btn-logout" (click)="logout()">Logout</button>
+  </div>
+
+  <ng-template #loginBlock>
+    <div class="navbar-user">
+      <a routerLink="/login" class="btn-login">Login</a>
+      <a routerLink="/register" class="btn-register">Register</a>
+    </div>
+  </ng-template>
+</nav>

@@ -1,0 +1,109 @@
+<div class="page-container">
+  <div class="page-header">
+    <h1>Postări</h1>
+    <a routerLink="/posts/new" class="btn-primary">+ Postare nouă</a>
+  </div>
+
+  <!-- Filtre -->
+  <div class="filters-bar">
+    <div class="search-box">
+      <input
+        type="text"
+        [(ngModel)]="searchQuery"
+        placeholder="Caută după titlu sau autor..."
+        (keyup.enter)="onSearch()"
+      />
+      <button (click)="onSearch()" class="btn-search">Caută</button>
+    </div>
+
+    <div class="filter-buttons">
+      <button
+        *ngIf="currentUser"
+        [class.active]="filterMine"
+        (click)="onFilterMine()"
+        class="btn-filter"
+      >Postările mele</button>
+      <button (click)="clearFilters()" class="btn-filter">Toate</button>
+    </div>
+  </div>
+
+  <!-- Tag-uri -->
+  <div class="tags-row" *ngIf="tags.length > 0">
+    <span class="tags-label">Tag-uri:</span>
+    <button
+      *ngFor="let tag of tags"
+      class="tag-chip"
+      [class.selected]="selectedTag === tag.name"
+      (click)="onTagFilter(tag.name)"
+    >#{{ tag.name }}</button>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-msg">Se încarcă postările...</div>
+
+  <!-- Posts Grid -->
+  <div class="posts-grid" *ngIf="!loading">
+    <div *ngIf="posts.length === 0" class="empty-state">
+      <p>Nicio postare găsită.</p>
+    </div>
+
+    <div
+      *ngFor="let post of posts"
+      class="post-card"
+      (click)="goToPost(post.id)"
+    >
+      <!-- Image -->
+      <div class="post-image" *ngIf="post.imageUrl">
+        <img [src]="'http://localhost:8080' + post.imageUrl" alt="Post image" />
+      </div>
+
+      <div class="post-body">
+        <!-- Status badge -->
+        <div class="status-row">
+          <span class="status-badge" [class]="'status-' + post.status.toLowerCase()">
+            {{ getStatusLabel(post.status) }}
+          </span>
+          <span class="post-date">{{ post.createdAt | date:'dd MMM yyyy, HH:mm' }}</span>
+        </div>
+
+        <h2 class="post-title">{{ post.title }}</h2>
+        <p class="post-excerpt">{{ post.content | slice:0:150 }}{{ post.content.length > 150 ? '...' : '' }}</p>
+
+        <!-- Tags -->
+        <div class="post-tags" *ngIf="post.tags && post.tags.length > 0">
+          <span *ngFor="let tag of post.tags" class="tag-chip small">#{{ tag.name }}</span>
+        </div>
+
+        <div class="post-footer">
+          <div class="author-info">
+            <span class="author-name">{{ post.author.username }}</span>
+            <span class="author-score">⭐ {{ voteService.getUserScore(post.author.id) }}</span>
+          </div>
+
+          <!-- Vote buttons -->
+          <div class="vote-section" (click)="$event.stopPropagation()">
+            <button
+              class="vote-btn up"
+              [class.voted]="getUserVote(post) === 'UP'"
+              (click)="vote(post, 'UP', $event)"
+            >▲</button>
+            <span class="vote-count" [class.positive]="getVoteCount(post) > 0" [class.negative]="getVoteCount(post) < 0">
+              {{ getVoteCount(post) }}
+            </span>
+            <button
+              class="vote-btn down"
+              [class.voted]="getUserVote(post) === 'DOWN'"
+              (click)="vote(post, 'DOWN', $event)"
+            >▼</button>
+          </div>
+
+          <!-- Actions -->
+          <div class="post-actions" *ngIf="currentUser && currentUser.id === post.author.id" (click)="$event.stopPropagation()">
+            <a [routerLink]="['/posts', post.id, 'edit']" class="btn-edit">Edit</a>
+            <button (click)="deletePost(post, $event)" class="btn-delete">Șterge</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
