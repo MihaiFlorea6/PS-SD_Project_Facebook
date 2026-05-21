@@ -52,22 +52,19 @@ jobs:
         working-directory: facebook-interfata
         run: npm ci --legacy-peer-deps
 
+      - name: Instaleaza Cypress in root
+        run: npm install cypress --save-dev
+
       - name: Build Angular
         working-directory: facebook-interfata
         run: npx ng build --configuration production
 
-      - name: Instaleaza Cypress
-        working-directory: facebook-interfata
+      - name: Instaleaza Cypress binar
         run: npx cypress install
-
-      - name: Verifica ce s-a generat in dist
-        working-directory: facebook-interfata
-        run: ls -la dist/ && ls -la dist/facebook-interfata/ || true
 
       - name: Porneste server static Angular
         working-directory: facebook-interfata
         run: npx http-server ./dist/facebook-interfata/browser -p 4200 -c-1 --silent &
-        # Daca nu merge calea de mai sus, incearca: ./dist/facebook-interfata
 
       - name: Asteapta serverul pe portul 4200
         run: |
@@ -84,7 +81,6 @@ jobs:
           exit 1
 
       - name: Ruleaza Cypress
-        working-directory: facebook-interfata
         run: npx cypress run --headless --browser chrome
         env:
           CYPRESS_BASE_URL: http://localhost:4200
@@ -95,5 +91,5 @@ jobs:
         if: always()
         with:
           name: cypress-screenshots
-          path: facebook-interfata/cypress/screenshots
+          path: cypress/screenshots
           if-no-files-found: ignore
