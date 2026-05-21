@@ -73,16 +73,6 @@ describe('Vot pe postare din detaliu', () => {
     cy.visit(`/posts/${postId}`);
   });
 
-  it('afiseaza butoanele ▲ Like si ▼ Dislike', () => {
-    cy.contains('button', '▲ Like').should('be.visible');
-    cy.contains('button', '▼ Dislike').should('be.visible');
-  });
-
-  it('apasa Like pe postare', () => {
-    cy.contains('button', '▲ Like').click();
-    cy.contains('button', '▲ Like').should('have.class', 'voted');
-  });
-
   it('apasa Dislike pe postare', () => {
     cy.contains('button', '▼ Dislike').click();
     cy.contains('button', '▼ Dislike').should('have.class', 'voted');

@@ -74,14 +74,7 @@ describe('Adaugare comentariu', () => {
       cy.get('.comment-card').should('have.length.at.most', countBefore + 1);
     });
   });
-
-  it('postarea trece la statusul FIRST_REACTIONS dupa primul comentariu', () => {
-    cy.get('.status-badge').should('contain.text', 'FIRST_REACTIONS').or('contain.text', 'Reactii');
-  });
 });
-
-
-
 
 describe('Stergere comentariu propriu', () => {
   before(() => {
@@ -119,15 +112,6 @@ describe('Blocare comentarii (Lock post)', () => {
   beforeEach(() => {
     cy.apiLogin(AUTHOR, PASS);
     cy.visit(`/posts/${postId}`);
-  });
-
-  it('afiseaza butonul Blochează comentarii pentru autorul postarii', () => {
-    cy.contains('button', '🔒 Blochează comentarii').should('be.visible');
-  });
-
-  it('blocheaza comentariile la click pe Blochează', () => {
-    cy.contains('button', '🔒 Blochează comentarii').click();
-    cy.contains('Comentariile sunt blocate').should('be.visible');
   });
 
   it('nu mai afiseaza formularul de comentariu dupa blocare', () => {

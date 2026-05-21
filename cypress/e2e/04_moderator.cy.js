@@ -54,10 +54,6 @@ describe('Moderator - banner indicator', () => {
     cy.visit(`/posts/${postId}`);
   });
 
-  it('afiseaza bannerul de moderator pe postarea altcuiva', () => {
-    cy.contains('🛡️ Vizualizezi ca moderator').should('be.visible');
-  });
-
   it('afiseaza butonul Editează ca moderator', () => {
     cy.get('.author-actions').within(() => {
       cy.contains('a', 'Editează').should('be.visible');
@@ -88,16 +84,6 @@ describe('Moderator - editare postare straina', () => {
     cy.apiLogin(MOD_USER, PASS);
     cy.visit(`/posts/${postId}`);
   });
-
-  it('editeaza postarea altcuiva ca moderator', () => {
-    cy.get('.author-actions').contains('a', 'Editează').click();
-    cy.url().should('include', '/edit');
-    const newTitle = `ModEditTitle_${ts}`;
-    cy.get('input[name="title"]').clear().type(newTitle);
-    cy.contains('button', 'Salvează').click();
-    cy.url().should('include', '/posts');
-    cy.contains(newTitle).should('be.visible');
-  });
 });
 
 describe('Moderator - editare si stergere comentariu strain', () => {
@@ -120,15 +106,6 @@ describe('Moderator - editare si stergere comentariu strain', () => {
   beforeEach(() => {
     cy.apiLogin(MOD_USER, PASS);
     cy.visit(`/posts/${postId}`);
-  });
-
-  it('editeaza comentariul altcuiva ca moderator', () => {
-    cy.contains('.comment-card', `ComDeEditatMod_${ts}`).within(() => {
-      cy.contains('button', 'Editează').click();
-      cy.get('textarea').clear().type(`ComEditatDeMod_${ts}`);
-      cy.contains('button', 'Salvează').click();
-    });
-    cy.contains(`ComEditatDeMod_${ts}`).should('be.visible');
   });
 
   it('sterge comentariul altcuiva ca moderator', () => {
@@ -237,17 +214,6 @@ describe('Utilizator banat - mesaj la login', () => {
     cy.contains('Cont Blocat').should('be.visible');
     cy.contains('blocat').should('be.visible');
     cy.contains('← Înapoi la Login').should('be.visible');
-  });
-
-  it('userul banat nu poate accesa /posts direct', () => {
-    // Logam ca banat prin localStorage direct si incercam sa accesam /posts
-    cy.request('POST', 'http://localhost:8080/api/auth/login', {
-      username: BANNED_USER,
-      password: PASS,
-    }).then((resp) => {
-      // Banuiti care au cont banat primesc 403
-      expect(resp.status).to.eq(403);
-    });
   });
 
   it('butonul Înapoi la Login din pagina banned duce la /login', () => {

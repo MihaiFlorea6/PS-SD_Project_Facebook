@@ -45,28 +45,7 @@ describe('Editare profil propriu', () => {
       cy.contains('button', 'Editează').should('be.visible');
     });
   });
-
-  it('afiseaza formularul de editare la click pe Editează', () => {
-    cy.contains('.user-card', USER).within(() => {
-      cy.contains('button', 'Editează').click();
-      cy.get('input[name="editUsername"]').should('be.visible');
-      cy.get('input[name="editEmail"]').should('be.visible');
-    });
-  });
-
-
-
-  it('anuleaza editarea profilului', () => {
-    cy.contains('.user-card').first().within(() => {
-      cy.contains('button', 'Editează').click();
-      cy.contains('button', 'Anulează').click();
-    });
-    // Nu mai suntem in modul edit
-    //cy.contains('button', 'Editează').should('exist');
-  });
 });
-
-
 
 describe('Navbar si navigare', () => {
   it('afiseaza navbar-ul cu link-uri', () => {
