@@ -41,12 +41,31 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: Frumusica4414
+          MYSQL_DATABASE: assignment1_db
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pFrumusica4414"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=15
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Instaleaza dependente frontend
         working-directory: facebook-interfata
@@ -62,20 +81,42 @@ jobs:
       - name: Instaleaza Cypress binar
         run: npx cypress install
 
+      - name: Porneste backend Spring Boot
+        working-directory: Assigment1
+        run: |
+          mvn spring-boot:run \
+            -Dspring-boot.run.jvmArguments="-Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/assignment1_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true -Dspring.datasource.username=root -Dspring.datasource.password=Frumusica4414" &
+
+      - name: Asteapta backend
+        run: |
+          echo "Astept backend..."
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:8080/api/users > /dev/null; then
+              echo "Backend pornit!"
+              exit 0
+            fi
+            echo "Attempt $i..."
+            sleep 4
+          done
+          echo "Backend nu a pornit"
+          exit 1
+
       - name: Porneste server static Angular
         working-directory: facebook-interfata
         run: npx http-server ./dist/facebook-interfata/browser -p 4200 -c-1 --silent &
 
-      - name: Asteapta serverul pe portul 4200
+      - name: Asteapta Angular
         run: |
+          echo "Astept Angular..."
           for i in $(seq 1 30); do
             if curl -s http://localhost:4200 > /dev/null; then
-              echo "Serverul e pornit!"
+              echo "Angular pornit!"
               exit 0
             fi
             echo "Attempt $i..."
             sleep 2
           done
+          echo "Angular nu a pornit"
           exit 1
 
       - name: Ruleaza Cypress
