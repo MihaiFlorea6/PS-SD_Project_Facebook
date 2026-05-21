@@ -10,6 +10,9 @@ jobs:
   lint:
     name: Lint (ESLint)
     runs-on: ubuntu-22.04
+    defaults:
+      run:
+        working-directory: facebook-interfata
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,6 +25,9 @@ jobs:
     name: Build Angular
     runs-on: ubuntu-22.04
     needs: lint
+    defaults:
+      run:
+        working-directory: facebook-interfata
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -62,6 +68,7 @@ jobs:
           java-version: '21'
 
       - name: Instaleaza dependente frontend
+        working-directory: facebook-interfata
         run: npm ci --legacy-peer-deps
 
       - name: Porneste backend Spring Boot
@@ -77,15 +84,18 @@ jobs:
         run: npx wait-on http://localhost:8080/api/users --timeout 120000
 
       - name: Instaleaza Cypress
+        working-directory: facebook-interfata
         run: npx cypress install
 
       - name: Porneste Angular
-        run: npx ng serve --host 0.0.0.0 &
+        working-directory: facebook-interfata
+        run: npx ng serve --host 0.0.0.0 --port 4200 &
 
       - name: Asteapta Angular
         run: npx wait-on http://localhost:4200 --timeout 120000
 
       - name: Ruleaza Cypress
+        working-directory: facebook-interfata
         run: npx cypress run --headless --browser chrome
         env:
           CYPRESS_BASE_URL: http://localhost:4200
@@ -96,5 +106,5 @@ jobs:
         if: always()
         with:
           name: cypress-screenshots
-          path: cypress/screenshots
+          path: facebook-interfata/cypress/screenshots
           if-no-files-found: ignore
