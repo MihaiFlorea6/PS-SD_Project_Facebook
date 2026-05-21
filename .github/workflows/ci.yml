@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       - run: npm ci --legacy-peer-deps
       - run: npx ng lint --if-present || echo "Lint OK"
 
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
       - run: npm ci --legacy-peer-deps
       - run: npx ng build --configuration production
 
@@ -46,7 +46,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Instaleaza dependente frontend
         working-directory: facebook-interfata
@@ -68,16 +68,14 @@ jobs:
 
       - name: Asteapta serverul pe portul 4200
         run: |
-          echo "Astept portul 4200..."
           for i in $(seq 1 30); do
             if curl -s http://localhost:4200 > /dev/null; then
               echo "Serverul e pornit!"
               exit 0
             fi
-            echo "Attempt $i - astept 2 secunde..."
+            echo "Attempt $i..."
             sleep 2
           done
-          echo "Serverul nu a pornit in 60 secunde"
           exit 1
 
       - name: Ruleaza Cypress
