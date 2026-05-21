@@ -41,20 +41,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs: build
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: Frumusica4414
-          MYSQL_DATABASE: assignment1_db
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pFrumusica4414"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=15
-
     steps:
       - uses: actions/checkout@v4
 
@@ -62,43 +48,40 @@ jobs:
         with:
           node-version: '18'
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Instaleaza unelte globale
-        run: npm install -g wait-on http-server
-
       - name: Instaleaza dependente frontend
         working-directory: facebook-interfata
         run: npm ci --legacy-peer-deps
 
-      - name: Build Angular pentru E2E
+      - name: Build Angular
         working-directory: facebook-interfata
         run: npx ng build --configuration production
-
-      - name: Porneste backend Spring Boot
-        working-directory: Assigment1
-        run: |
-          mvn spring-boot:run \
-            -Dspring-boot.run.jvmArguments="\
-              -Dspring.datasource.url=jdbc:mysql://127.0.0.1:3306/assignment1_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true \
-              -Dspring.datasource.username=root \
-              -Dspring.datasource.password=Frumusica4414" &
-
-      - name: Asteapta backend
-        run: wait-on http://localhost:8080/api/users --timeout 120000
 
       - name: Instaleaza Cypress
         working-directory: facebook-interfata
         run: npx cypress install
 
-      - name: Porneste Angular (http-server pe dist)
-        run: http-server facebook-interfata/dist/facebook-interfata/browser --port 4200 -c-1 &
+      - name: Verifica ce s-a generat in dist
+        working-directory: facebook-interfata
+        run: ls -la dist/ && ls -la dist/facebook-interfata/ || true
 
-      - name: Asteapta Angular
-        run: wait-on http://localhost:4200 --timeout 60000
+      - name: Porneste server static Angular
+        working-directory: facebook-interfata
+        run: npx http-server ./dist/facebook-interfata/browser -p 4200 -c-1 --silent &
+        # Daca nu merge calea de mai sus, incearca: ./dist/facebook-interfata
+
+      - name: Asteapta serverul pe portul 4200
+        run: |
+          echo "Astept portul 4200..."
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:4200 > /dev/null; then
+              echo "Serverul e pornit!"
+              exit 0
+            fi
+            echo "Attempt $i - astept 2 secunde..."
+            sleep 2
+          done
+          echo "Serverul nu a pornit in 60 secunde"
+          exit 1
 
       - name: Ruleaza Cypress
         working-directory: facebook-interfata
