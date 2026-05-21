@@ -67,9 +67,16 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Instaleaza unelte globale
+        run: npm install -g wait-on http-server
+
       - name: Instaleaza dependente frontend
         working-directory: facebook-interfata
         run: npm ci --legacy-peer-deps
+
+      - name: Build Angular pentru E2E
+        working-directory: facebook-interfata
+        run: npx ng build --configuration production
 
       - name: Porneste backend Spring Boot
         working-directory: Assigment1
@@ -81,18 +88,21 @@ jobs:
               -Dspring.datasource.password=Frumusica4414" &
 
       - name: Asteapta backend
-        run: npx wait-on http://localhost:8080/api/users --timeout 120000
+        run: wait-on http://localhost:8080/api/users --timeout 120000
 
       - name: Instaleaza Cypress
         working-directory: facebook-interfata
         run: npx cypress install
 
-      - name: Porneste Angular
+      - name: Porneste Angular (http-server pe dist)
         working-directory: facebook-interfata
-        run: npx ng serve --host 0.0.0.0 --port 4200 &
+        run: |
+          DIST_FOLDER=$(find dist -name "index.html" | head -1 | xargs dirname)
+          echo "Serving from: $DIST_FOLDER"
+          http-server "$DIST_FOLDER" --port 4200 -c-1 &
 
       - name: Asteapta Angular
-        run: npx wait-on http://localhost:4200 --timeout 120000
+        run: wait-on http://localhost:4200 --timeout 60000
 
       - name: Ruleaza Cypress
         working-directory: facebook-interfata
