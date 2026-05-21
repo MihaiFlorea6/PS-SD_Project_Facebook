@@ -8,20 +8,28 @@ export interface VoteState {
 
 @Injectable({ providedIn: 'root' })
 export class VoteService {
-  private storageKey = 'fb_votes';
   private scoreKey = 'fb_scores';
-  private votes: Record<string, VoteState> = {};
   private scores: Record<number, number> = {};
 
   constructor() {
-    const saved = localStorage.getItem(this.storageKey);
-    if (saved) this.votes = JSON.parse(saved);
     const savedScores = localStorage.getItem(this.scoreKey);
     if (savedScores) this.scores = JSON.parse(savedScores);
   }
 
-  private save() {
-    localStorage.setItem(this.storageKey, JSON.stringify(this.votes));
+  // Cheia de storage depinde de userul curent
+  private getStorageKey(userId: number): string {
+    return `fb_votes_user_${userId}`;
+  }
+
+  // Incarca voturile userului curent din localStorage
+  private loadVotes(userId: number): Record<string, VoteState> {
+    const saved = localStorage.getItem(this.getStorageKey(userId));
+    return saved ? JSON.parse(saved) : {};
+  }
+
+  // Salveaza voturile userului curent
+  private saveVotes(userId: number, votes: Record<string, VoteState>): void {
+    localStorage.setItem(this.getStorageKey(userId), JSON.stringify(votes));
     localStorage.setItem(this.scoreKey, JSON.stringify(this.scores));
   }
 
@@ -29,17 +37,37 @@ export class VoteService {
     return `${type}_${id}`;
   }
 
-  getState(type: 'post' | 'comment', id: number): VoteState {
-    const key = this.getKey(type, id);
-    if (!this.votes[key]) {
-      this.votes[key] = { upvotes: 0, downvotes: 0, userVote: null };
+  getState(type: 'post' | 'comment', id: number, currentUserId?: number): VoteState {
+    if (!currentUserId) {
+      return { upvotes: 0, downvotes: 0, userVote: null };
     }
-    return this.votes[key];
+    const votes = this.loadVotes(currentUserId);
+    const key = this.getKey(type, id);
+    if (!votes[key]) {
+      votes[key] = { upvotes: 0, downvotes: 0, userVote: null };
+    }
+    return votes[key];
   }
 
-  getVoteCount(type: 'post' | 'comment', id: number): number {
-    const s = this.getState(type, id);
-    return s.upvotes - s.downvotes;
+  getVoteCount(type: 'post' | 'comment', id: number, currentUserId?: number): number {
+    // Numara voturile tuturor userilor pentru acest item
+    // Scaneaza toate cheile de tip fb_votes_user_* din localStorage
+    let upvotes = 0;
+    let downvotes = 0;
+    const key = this.getKey(type, id);
+    for (let i = 0; i < localStorage.length; i++) {
+      const storageKey = localStorage.key(i);
+      if (storageKey && storageKey.startsWith('fb_votes_user_')) {
+        try {
+          const userVotes: Record<string, VoteState> = JSON.parse(localStorage.getItem(storageKey) || '{}');
+          if (userVotes[key]) {
+            upvotes += userVotes[key].upvotes;
+            downvotes += userVotes[key].downvotes;
+          }
+        } catch { /* ignora erori de parse */ }
+      }
+    }
+    return upvotes - downvotes;
   }
 
   // Returns new voteCount
@@ -52,42 +80,46 @@ export class VoteService {
   ): number {
     if (currentUserId === contentAuthorId) {
       alert('Nu poți vota propriul tău conținut!');
-      return this.getVoteCount(type, id);
+      return this.getVoteCount(type, id, currentUserId);
     }
+
+    const votes = this.loadVotes(currentUserId);
     const key = this.getKey(type, id);
-    const state = this.getState(type, id);
+    if (!votes[key]) {
+      votes[key] = { upvotes: 0, downvotes: 0, userVote: null };
+    }
+    const state = votes[key];
     const prevVote = state.userVote;
 
-    // Toggle off if same vote
+    // Toggle off daca dai acelasi vot
     if (prevVote === direction) {
       if (direction === 'UP') state.upvotes--;
       else state.downvotes--;
       state.userVote = null;
       this.updateScore(contentAuthorId, type, direction, 'remove');
     } else {
-      // Remove previous vote
+      // Sterge votul anterior
       if (prevVote === 'UP') {
         state.upvotes--;
         this.updateScore(contentAuthorId, type, 'UP', 'remove');
       } else if (prevVote === 'DOWN') {
         state.downvotes--;
         this.updateScore(contentAuthorId, type, 'DOWN', 'remove');
-        // Downvoter gets back their -1.5
         this.scores[currentUserId] = (this.scores[currentUserId] || 0) + 1.5;
       }
-      // Add new vote
+      // Adauga noul vot
       if (direction === 'UP') state.upvotes++;
       else {
         state.downvotes++;
-        // Downvoter loses 1.5 points
         this.scores[currentUserId] = (this.scores[currentUserId] || 0) - 1.5;
       }
       state.userVote = direction;
       this.updateScore(contentAuthorId, type, direction, 'add');
     }
-    this.votes[key] = state;
-    this.save();
-    return state.upvotes - state.downvotes;
+
+    votes[key] = state;
+    this.saveVotes(currentUserId, votes);
+    return this.getVoteCount(type, id, currentUserId);
   }
 
   private updateScore(
@@ -105,7 +137,6 @@ export class VoteService {
     }
     if (action === 'remove') delta = -delta;
     this.scores[authorId] += delta;
-    this.save();
   }
 
   getUserScore(userId: number): number {

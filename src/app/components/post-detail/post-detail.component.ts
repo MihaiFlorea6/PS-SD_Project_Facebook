@@ -26,6 +26,10 @@ export class PostDetailComponent implements OnInit {
   editingCommentContent = '';
   submittingComment = false;
 
+  // FEATURE 2: imaginea comentariului
+  commentImageFile: File | null = null;
+  commentImagePreview: string | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private postService: PostService,
@@ -57,28 +61,76 @@ export class PostDetailComponent implements OnInit {
     this.postService.getComments(postId).subscribe({
       next: comments => {
         this.comments = comments.sort((a, b) =>
-          this.voteService.getVoteCount('comment', b.id) - this.voteService.getVoteCount('comment', a.id)
+          this.voteService.getVoteCount('comment', b.id, this.currentUser?.id)
+          - this.voteService.getVoteCount('comment', a.id, this.currentUser?.id)
         );
       }
     });
   }
 
-  addComment(): void {
+  // FEATURE 2: selectare fisier imagine pentru comentariu
+  onCommentFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      this.commentImageFile = input.files[0];
+      const reader = new FileReader();
+      reader.onload = e => this.commentImagePreview = e.target?.result as string;
+      reader.readAsDataURL(this.commentImageFile);
+    }
+  }
+
+  removeCommentImage(): void {
+    this.commentImageFile = null;
+    this.commentImagePreview = null;
+  }
+
+  async addComment(): Promise<void> {
     if (!this.currentUser || !this.post) return;
     if (!this.newCommentContent.trim()) { alert('Comentariul nu poate fi gol.'); return; }
     if (this.post.status === 'OUTDATED') { alert('Această postare nu mai acceptă comentarii.'); return; }
 
     this.submittingComment = true;
+
+    // FEATURE 2: upload imaginea comentariului daca exista
+    let imageUrl: string | undefined = undefined;
+    if (this.commentImageFile) {
+      try {
+        imageUrl = await this.uploadImage(this.commentImageFile);
+      } catch {
+        alert('Eroare la încărcarea imaginii comentariului.');
+        this.submittingComment = false;
+        return;
+      }
+    }
+
     this.postService.addComment(this.post.id, {
       authorId: this.currentUser.id,
-      content: this.newCommentContent.trim()
+      content: this.newCommentContent.trim(),
+      imageUrl: imageUrl
     }).subscribe({
       next: () => {
         this.newCommentContent = '';
+        this.commentImageFile = null;
+        this.commentImagePreview = null;
         this.submittingComment = false;
         this.loadPost(this.post!.id);
       },
       error: () => { this.submittingComment = false; alert('Eroare la adăugarea comentariului.'); }
+    });
+  }
+
+  // Upload imagine la backend (acelasi endpoint ca la posturi)
+  private uploadImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      fetch('http://localhost:8080/api/images/upload', {
+        method: 'POST',
+        body: formData
+      })
+        .then(r => r.json())
+        .then(data => data.url ? resolve(data.url) : reject(data))
+        .catch(reject);
     });
   }
 
@@ -122,7 +174,8 @@ export class PostDetailComponent implements OnInit {
     if (!this.currentUser || !this.post) return;
     this.voteService.vote('comment', comment.id, direction, this.currentUser.id, comment.author.id);
     this.comments = [...this.comments].sort((a, b) =>
-      this.voteService.getVoteCount('comment', b.id) - this.voteService.getVoteCount('comment', a.id)
+      this.voteService.getVoteCount('comment', b.id, this.currentUser?.id)
+      - this.voteService.getVoteCount('comment', a.id, this.currentUser?.id)
     );
   }
 
@@ -145,19 +198,19 @@ export class PostDetailComponent implements OnInit {
   }
 
   getPostVoteCount(): number {
-    return this.post ? this.voteService.getVoteCount('post', this.post.id) : 0;
+    return this.post ? this.voteService.getVoteCount('post', this.post.id, this.currentUser?.id) : 0;
   }
 
   getPostUserVote(): 'UP' | 'DOWN' | null {
-    return this.post ? this.voteService.getState('post', this.post.id).userVote : null;
+    return this.post ? this.voteService.getState('post', this.post.id, this.currentUser?.id).userVote : null;
   }
 
   getCommentVoteCount(comment: Comment): number {
-    return this.voteService.getVoteCount('comment', comment.id);
+    return this.voteService.getVoteCount('comment', comment.id, this.currentUser?.id);
   }
 
   getCommentUserVote(comment: Comment): 'UP' | 'DOWN' | null {
-    return this.voteService.getState('comment', comment.id).userVote;
+    return this.voteService.getState('comment', comment.id, this.currentUser?.id).userVote;
   }
 
   getStatusLabel(status: string): string {

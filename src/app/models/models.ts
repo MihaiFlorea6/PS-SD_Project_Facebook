@@ -17,6 +17,7 @@ export interface Tag {
 export interface Comment {
   id: number;
   content: string;
+  imageUrl?: string;   // FEATURE 2: imaginea comentariului
   createdAt: string;
   updatedAt?: string;
   author: User;
@@ -50,6 +51,7 @@ export interface CreatePostRequest {
 export interface CreateCommentRequest {
   authorId: number;
   content: string;
+  imageUrl?: string;   // FEATURE 2: imaginea comentariului
 }
 
 export interface VoteRequest {

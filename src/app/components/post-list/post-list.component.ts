@@ -100,11 +100,11 @@ export class PostListComponent implements OnInit {
   }
 
   getVoteCount(post: Post): number {
-    return this.voteService.getVoteCount('post', post.id);
+    return this.voteService.getVoteCount('post', post.id, this.currentUser?.id);
   }
 
   getUserVote(post: Post): 'UP' | 'DOWN' | null {
-    return this.voteService.getState('post', post.id).userVote;
+    return this.voteService.getState('post', post.id, this.currentUser?.id).userVote;
   }
 
   getStatusLabel(status: string): string {

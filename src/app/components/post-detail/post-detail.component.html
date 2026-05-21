@@ -6,7 +6,7 @@
 
     <!-- Moderator indicator -->
     <div class="mod-banner" *ngIf="isModerator && !isPostAuthor()">
-       Vizualizezi ca moderator — poți edita sau șterge această postare
+      Vizualizezi ca moderator — poți edita sau șterge această postare
     </div>
 
     <!-- Post Header -->
@@ -80,6 +80,26 @@
           placeholder="Adaugă un comentariu..."
           rows="3"
         ></textarea>
+
+        <!-- FEATURE 2: upload imagine comentariu -->
+        <div class="comment-image-upload">
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onCommentFileSelected($event)"
+            id="commentImageInput"
+            style="display:none"
+          />
+          <label for="commentImageInput" class="btn-upload-small">
+            📎 Adaugă imagine (opțional)
+          </label>
+          <span *ngIf="commentImageFile" class="file-name-small">{{ commentImageFile.name }}</span>
+        </div>
+        <div class="comment-image-preview" *ngIf="commentImagePreview">
+          <img [src]="commentImagePreview" alt="Preview comentariu" style="max-width:200px; border-radius:6px; margin-top:6px;" />
+          <button type="button" (click)="removeCommentImage()" class="btn-remove-img">✕</button>
+        </div>
+
         <button (click)="addComment()" [disabled]="submittingComment" class="btn-primary">
           {{ submittingComment ? 'Se trimite...' : 'Adaugă comentariu' }}
         </button>
@@ -119,6 +139,10 @@
 
         <ng-template #viewMode>
           <p class="comment-content">{{ comment.content }}</p>
+          <!-- FEATURE 2: imaginea comentariului -->
+          <div class="comment-image" *ngIf="comment.imageUrl">
+            <img [src]="'http://localhost:8080' + comment.imageUrl" alt="Imagine comentariu" style="max-width:300px; border-radius:8px; margin-top:8px;" />
+          </div>
         </ng-template>
 
         <div class="comment-footer">
